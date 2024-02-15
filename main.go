@@ -52,7 +52,7 @@ func main() {
 
 	docs.SwaggerInfo.Title = "Palworld Manage API"
 	docs.SwaggerInfo.Version = version
-	docs.SwaggerInfo.Host = fmt.Sprintf("127.0.0.1:%d", viper.GetInt("web.port"))
+	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%d", viper.GetString("web.broadcast_address"), viper.GetInt("web.port"))
 	docs.SwaggerInfo.BasePath = "/"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
@@ -71,8 +71,8 @@ func main() {
 
 	logger.Info("Starting PalWorld Server Tool...\n")
 	logger.Infof("Version: %s\n", version)
-	logger.Infof("Listening on http://127.0.0.1:%d or http://%s:%d\n", viper.GetInt("web.port"), viper.GetString("web.broadcast_address"), viper.GetInt("web.port"))
-	logger.Infof("Swagger on http://127.0.0.1:%d/swagger/index.html\n", viper.GetInt("web.port"))
+	logger.Infof("Listening on http://%s:%d\n", viper.GetInt("web.port"), viper.GetString("web.broadcast_address"), viper.GetInt("web.port"))
+	logger.Infof("Swagger on http://%s:%d/swagger/index.html\n", viper.GetString("web.broadcast_address"), viper.GetInt("web.port"))
 
 	go task.Schedule(db)
 	defer task.Shutdown()
