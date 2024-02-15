@@ -1,0 +1,16 @@
+name: PST build binaries (Main) (Skip)
+
+on:
+  workflow_dispatch:
+
+env:
+  DONT_RUN: "1"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip
+        if: ${{ env.DONT_RUN != '1' }}
+        run: |
+          echo -e "cheesed to meet you."
+          exit 0
