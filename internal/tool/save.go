@@ -75,9 +75,14 @@ func ConversionLoading(file string) error {
 	}
 	defer os.Remove(tmpFile)
 
-	baseUrl := fmt.Sprintf("http://%s", viper.GetString("web.broadcast_address"))
+  address := viper.GetString("web.broadcast_address")
+	if address == "" {
+		address = "127.0.0.1"
+	}
+
+	baseUrl := fmt.Sprintf("http://%s", address)
 	if viper.GetBool("web.tls") {
-		baseUrl = fmt.Sprintf("https://%s", viper.GetString("web.broadcast_address"))
+		baseUrl = fmt.Sprintf("https://%s", address)
 	}
 
 	requestUrl := fmt.Sprintf("%s:%d/api/", baseUrl, viper.GetInt("web.port"))

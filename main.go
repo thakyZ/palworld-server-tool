@@ -71,7 +71,7 @@ func main() {
 
 	localIp, err := system.GetLocalIP()
 	if err != nil {
-		logger.Error(err)
+		logger.Errorf("%s\n", err)
 	}
 	address := viper.GetString("web.broadcast_address")
 	if address == "" {
@@ -81,7 +81,7 @@ func main() {
 	logger.Info("Starting PalWorld Server Tool...\n")
 	logger.Infof("Version: %s\n", version)
 	if (viper.GetString("web.broadcast_address") == "") {
-		logger.Infof("Listening on http://127.0.0.1:%d\n and http://%s:%d\n", viper.GetInt("web.port"), localIp, viper.GetInt("web.port"))
+		logger.Infof("Listening on http://127.0.0.1:%d and http://%s:%d\n", viper.GetInt("web.port"), localIp, viper.GetInt("web.port"))
  	} else {
 	  logger.Infof("Listening on http://%s:%d\n", address, viper.GetInt("web.port"))
 	}
