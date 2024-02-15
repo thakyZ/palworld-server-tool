@@ -17,6 +17,7 @@ import (
 	"github.com/zaigie/palworld-server-tool/internal/config"
 	"github.com/zaigie/palworld-server-tool/internal/database"
 	"github.com/zaigie/palworld-server-tool/internal/logger"
+	"github.com/zaigie/palworld-server-tool/internal/system"
 	"github.com/zaigie/palworld-server-tool/internal/task"
 )
 
@@ -58,7 +59,6 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := api.RegisterRouter()
-
 	assetsFS, _ := fs.Sub(assets, "assets")
 	router.StaticFS("/assets", http.FS(assetsFS))
 	router.ForwardedByClientIP = true
@@ -69,10 +69,23 @@ func main() {
 		c.Writer.Write(file)
 	})
 
+	localIp, err := system.GetLocalIP()
+	if err != nil {
+		logger.Error(err)
+	}
+	address := viper.GetString("web.broadcast_address")
+	if address == "" {
+		address = "127.0.0.1"
+	}
+
 	logger.Info("Starting PalWorld Server Tool...\n")
 	logger.Infof("Version: %s\n", version)
-	logger.Infof("Listening on http://%s:%d\n", viper.GetString("web.broadcast_address"), viper.GetInt("web.port"))
-	logger.Infof("Swagger on http://%s:%d/swagger/index.html\n", viper.GetString("web.broadcast_address"), viper.GetInt("web.port"))
+	if (viper.GetString("web.broadcast_address") == "") {
+		logger.Infof("Listening on http://127.0.0.1:%d\n and http://%s:%d\n", viper.GetInt("web.port"), localIp, viper.GetInt("web.port"))
+ 	} else {
+	  logger.Infof("Listening on http://%s:%d\n", address, viper.GetInt("web.port"))
+	}
+	logger.Infof("Swagger on http://%s:%d/swagger/index.html\n", address, viper.GetInt("web.port"))
 
 	go task.Schedule(db)
 	defer task.Shutdown()
