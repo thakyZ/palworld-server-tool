@@ -4,6 +4,8 @@ web:
   tls: false
   cert_path: ""
   key_path: ""
+  trusted_proxies: []
+  broadcast_address: "127.0.0.1"
 rcon:
   address: "127.0.0.1:25575"
   password: ""

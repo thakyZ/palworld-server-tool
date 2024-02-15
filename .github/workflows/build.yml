@@ -1,0 +1,243 @@
+name: PST build binaries
+
+on:
+  workflow_dispatch:
+
+env:
+  UPSTREAM: https://github.com/zaigie/palworld-server-tool
+
+jobs:
+  build_sav_cli-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pyinstaller environment
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          python_ver: "3.10"
+          pyinstaller_ver: ">=6.4.0"
+          spec: "module/sav_cli.py"
+          requirements: "module/requirements.txt"
+          python_arch: x86
+          exe_path: "./module/dist/"
+          upload_exe_with_name: "sav_cli_windows_x86_64.exe"
+          options: --onefile, --name sav_cli_windows_x86_64.exe
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sav_cli_windows_x86_64.zip
+          path: |
+            module/dist/sav_cli_windows_x86_64.exe
+          compression-level: 0
+  build_sav_cli-darwin:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pyinstaller environment
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          python_ver: "3.10"
+          pyinstaller_ver: ">=6.4.0"
+          spec: "module/sav_cli.py"
+          requirements: "module/requirements.txt"
+          python_arch: arm64
+          exe_path: "./module/dist/"
+          options: --onefile, --name sav_cli_darwin_arm64
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sav_cli_darwin_arm64.zip
+          path: |
+            module/dist/sav_cli_darwin_arm64
+          compression-level: 0
+  build_sav_cli-arm:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      - name: Set Up Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Package through pyinstaller
+        run: |
+          mkdir module/dist
+          docker buildx build --platform linux/arm64 --file ./module/Dockerfile --build-arg branch=go_router_test --output type=local,dest=./module/dist/ .
+        shell: pwsh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sav_cli_linux_aarch64.zip
+          path: |
+            module/dist/sav_cli_linux_aarch64
+          compression-level: 0
+  build_sav_cli-linux:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pyinstaller environment
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          python_ver: "3.10"
+          pyinstaller_ver: ">=6.4.0"
+          spec: "module/sav_cli.py"
+          requirements: "module/requirements.txt"
+          python_arch: x64
+          exe_path: "./module/dist/"
+          options: --onefile, --name sav_cli_linux_x86_64
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sav_cli_linux_x86_64.zip
+          path: |
+            module/dist/sav_cli_linux_x86_64
+          compression-level: 0
+  build-program:
+    needs: [build_sav_cli-windows, build_sav_cli-darwin, build_sav_cli-arm, build_sav_cli-linux]
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Set latest tag"
+        shell: bash
+        run: |
+          git remote add upstream "${{ env.UPSTREAM }}.git"
+          git fetch upstream
+          echo "GIT_TAG=$(git tag | sort --version-sort | tail -n1)" >> $GITHUB_ENV
+      - name: Create output directory
+        shell: bash
+        run: |
+          echo "PREFIX=pst_${GIT_TAG}" >> $GITHUB_ENV
+          mkdir -p dist/
+      - name: Setup pnpm environment
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+      - name: Setup nodejs environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - name: Build frontend dependencies
+        shell: bash
+        run: |
+          cd web
+          pnpm install
+          pnpm build
+          cd ..
+      - name: Setup golang environment
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+      - name: Build golang proxy
+        shell: bash
+        run: |
+          echo "building for ${GIT_TAG}"
+
+          go mod download
+
+          mkdir -p dist/windows_x86_64 && mkdir -p dist/linux_x86_64 && mkdir -p dist/linux_aarch64 && mkdir -p dist/darwin_arm64
+
+          echo "building windows-386"
+          GOOS=windows GOARCH=386 go build -ldflags="-s -w -X 'main.version=${GIT_TAG}'" -o ./dist/windows_x86_64/pst.exe main.go
+          echo "building linux-amd"
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X 'main.version=${GIT_TAG}'" -o ./dist/linux_x86_64/pst main.go
+          echo "building linux-arm"
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X 'main.version=${GIT_TAG}'" -o ./dist/linux_aarch64/pst main.go
+          echo "building darwin-arm"
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X 'main.version=${GIT_TAG}'" -o ./dist/darwin_arm64/pst main.go
+
+          echo "building windows-386"
+          GOOS=windows GOARCH=386 go build -ldflags="-s -w" -o ./dist/pst-agent_${GIT_TAG}_windows_x86_64.exe ./cmd/pst-agent/main.go
+          echo "building linux-amd"
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ./dist/pst-agent_${GIT_TAG}_linux_x86_64 ./cmd/pst-agent/main.go
+          echo "building linux-arm"
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o ./dist/pst-agent_${GIT_TAG}_linux_aarch64 ./cmd/pst-agent/main.go
+          echo "building darwin-arm"
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o ./dist/pst-agent_${GIT_TAG}_darwin_arm64 ./cmd/pst-agent/main.go
+      - name: Download sav_cli Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sav_cli_*
+          path: module/dist/
+          merge-multiple: true
+      - name: List sav_cli artifacts
+        id: list_sav_cli_artifacts_result
+        uses: MichaelMelena/list-artifacts@v1
+      - name: Delete sav_cli Artifacts
+        uses: MichaelMelena/remove-artifacts@v1
+        with:
+          artifacts: ${{ steps.list_sav_cli_artifacts_result.outputs.artifacts }}
+      - name: Package
+        shell: bash
+        run: |
+          cp module/dist/sav_cli_windows_x86_64.exe dist/windows_x86_64/sav_cli.exe
+          cp module/dist/sav_cli_linux_x86_64 dist/linux_x86_64/sav_cli
+          cp module/dist/sav_cli_linux_aarch64 dist/linux_aarch64/sav_cli
+          cp module/dist/sav_cli_darwin_arm64 dist/darwin_arm64/sav_cli
+
+          cp test/config.yaml dist/windows_x86_64/config.yaml
+          cp test/config.yaml dist/linux_x86_64/config.yaml
+          cp test/config.yaml dist/linux_aarch64/config.yaml
+          cp test/config.yaml dist/darwin_arm64/config.yaml
+
+          cp script/start.bat dist/windows_x86_64/start.bat
+
+          chmod -R 755 dist/*
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ env.PREFIX != '' }}
+        with:
+          name: ${{ env.PREFIX }}_windows_x86_64.zip
+          path: |
+            dist/windows_x86_64.zip
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ env.PREFIX != '' }}
+        with:
+          name: ${{ env.PREFIX }}_linux_x86_64.zip
+          path: |
+            dist/linux_x86_64
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ env.PREFIX != '' }}
+        with:
+          name: ${{ env.PREFIX }}_linux_aarch64.zip
+          path: |
+            dist/linux_aarch64
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ env.PREFIX != '' }}
+        with:
+          name: ${{ env.PREFIX }}_darwin_arm64.zip
+          path: |
+            dist/darwin_arm64
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ env.GIT_TAG != '' }}
+        with:
+          name: pst-agent_${{ env.GIT_TAG }}_windows_x86_64.zip
+          path: |
+            dist/pst-agent_${{ env.GIT_TAG }}_windows_x86_64.exe
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ env.GIT_TAG != '' }}
+        with:
+          name: pst-agent_${{ env.GIT_TAG }}_linux_x86_64.zip
+          path: |
+            dist/pst-agent_${{ env.GIT_TAG }}_linux_x86_64
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ env.GIT_TAG != '' }}
+        with:
+          name: pst-agent_${{ env.GIT_TAG }}_linux_aarch64.zip
+          path: |
+            dist/pst-agent_${{ env.GIT_TAG }}_linux_aarch64
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ env.GIT_TAG != '' }}
+        with:
+          name: pst-agent_${{ env.GIT_TAG }}_darwin_arm64.zip
+          path: |
+            dist/pst-agent_${{ env.GIT_TAG }}_darwin_arm64

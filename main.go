@@ -17,7 +17,6 @@ import (
 	"github.com/zaigie/palworld-server-tool/internal/config"
 	"github.com/zaigie/palworld-server-tool/internal/database"
 	"github.com/zaigie/palworld-server-tool/internal/logger"
-	"github.com/zaigie/palworld-server-tool/internal/system"
 	"github.com/zaigie/palworld-server-tool/internal/task"
 )
 
@@ -62,19 +61,17 @@ func main() {
 
 	assetsFS, _ := fs.Sub(assets, "assets")
 	router.StaticFS("/assets", http.FS(assetsFS))
+	router.ForwardedByClientIP = true
+	router.SetTrustedProxies(viper.GetStringSlice("web.trusted_proxies"))
 	router.GET("/", func(c *gin.Context) {
 		c.Writer.WriteHeader(http.StatusOK)
 		file, _ := indexHTML.ReadFile("index.html")
 		c.Writer.Write(file)
 	})
 
-	localIp, err := system.GetLocalIP()
-	if err != nil {
-		logger.Error(err)
-	}
 	logger.Info("Starting PalWorld Server Tool...\n")
 	logger.Infof("Version: %s\n", version)
-	logger.Infof("Listening on http://127.0.0.1:%d or http://%s:%d\n", viper.GetInt("web.port"), localIp, viper.GetInt("web.port"))
+	logger.Infof("Listening on http://127.0.0.1:%d or http://%s:%d\n", viper.GetInt("web.port"), viper.GetString("web.broadcast_address"), viper.GetInt("web.port"))
 	logger.Infof("Swagger on http://127.0.0.1:%d/swagger/index.html\n", viper.GetInt("web.port"))
 
 	go task.Schedule(db)
@@ -85,11 +82,11 @@ func main() {
 
 	go func() {
 		if viper.GetBool("web.tls") {
-			if err := router.RunTLS(fmt.Sprintf(":%d", viper.GetInt("web.port")), viper.GetString("web.cert_path"), viper.GetString("web.key_path")); err != nil {
+			if err := router.RunTLS(fmt.Sprintf("%s:%d", viper.GetString("web.broadcast_address"), viper.GetInt("web.port")), viper.GetString("web.cert_path"), viper.GetString("web.key_path")); err != nil {
 				logger.Errorf("Server exited with TLS error: %v\n", err)
 			}
 		} else {
-			if err := router.Run(fmt.Sprintf(":%d", viper.GetInt("web.port"))); err != nil {
+			if err := router.Run(fmt.Sprintf("%s:%d", viper.GetString("web.broadcast_address"), viper.GetInt("web.port"))); err != nil {
 				logger.Errorf("Server exited with error: %v\n", err)
 			}
 		}

@@ -5,15 +5,18 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/zaigie/palworld-server-tool/internal/logger"
+	"github.com/zaigie/palworld-server-tool/internal/system"
 )
 
 type Config struct {
 	Web struct {
-		Port     int    `mapstructure:"port"`
-		Password string `mapstructure:"password"`
-		Tls      bool   `mapstructure:"tls"`
-		CertPath string `mapstructure:"cert_path"`
-		KeyPath  string `mapstructure:"key_path"`
+		Port             int      `mapstructure:"port"`
+		Password         string   `mapstructure:"password"`
+		Tls              bool     `mapstructure:"tls"`
+		CertPath         string   `mapstructure:"cert_path"`
+		KeyPath          string   `mapstructure:"key_path"`
+		TrustedProxies   []string `mapstructure:"trusted_proxies"`
+		BroadcastAddress string   `mapstructure:"broadcast_address"`
 	}
 	Rcon struct {
 		Address      string `mapstructure:"address"`
@@ -51,6 +54,12 @@ func Init(cfgFile string, conf *Config) {
 	}
 
 	viper.SetDefault("web.port", 8080)
+	viper.SetDefault("web.trusted_proxies", []string{})
+	localIp, err := system.GetLocalIP()
+	if err != nil {
+		logger.Error(err)
+	}
+	viper.SetDefault("web.broadcast_address", localIp)
 	viper.SetDefault("rcon.timeout", 5)
 	viper.SetDefault("rcon.sync_interval", 60)
 	viper.SetDefault("save.sync_interval", 600)
