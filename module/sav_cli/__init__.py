@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """Main Command Line Module"""
-
+# pylint: disable=C0114
 import os
 import json
 import sys
@@ -20,9 +20,13 @@ def main() -> None:
     output: str | None = None
     start: float = time.time()
     parser = ArgumentParser()
-    parser.add_argument("--file", "-f", help="File to convert", type=str, default="Level.sav")
+    parser.add_argument(
+        "--file", "-f", help="File to convert", type=str, default="Level.sav"
+    )
     parser.add_argument("--clear", "-c", help="Clear input file", action="store_true")
-    parser.add_argument("--output", "-o", help="Output file", type=str, default="structure.json")
+    parser.add_argument(
+        "--output", "-o", help="Output file", type=str, default="structure.json"
+    )
     parser.add_argument("--request", "-r", help="Request", type=str, default="")
     parser.add_argument("--token", "-t", help="Request token", type=str, default="")
     args: Namespace = parser.parse_args()
@@ -32,36 +36,52 @@ def main() -> None:
         if not args.output.endswith(".json"):
             output = args.output + ".json"
 
-    converted: dict[str, Any] | str = convert_sav(args.file)
+    converted: str | dict[str, Any] = convert_sav(args.file)
+    filetime: float = os.stat(args.file).st_mtime
     if isinstance(converted, str):
-        log("Reading json file returned as typeof string", "ERROR")
+        log("Reading json file returned as typeof string.", "ERROR")
         sys.exit(1)
-    players: list[Any] = structure_player(converted)
-    guilds: list[Any] = structure_guild(converted)
+    players: list[dict[str, Any]] = structure_player(converted)
+    guilds: list[dict[str, Any]] = structure_guild(converted, filetime)
+
+    # Add last_online to players
+    for player in players:
+        for guild in guilds:
+            guild_players = guild["players"]
+            for guild_player in guild_players:
+                if player["player_uid"] == guild_player["player_uid"]:
+                    player["save_last_online"] = guild_player["last_online"]
+                    break
 
     if args.request == "" and output is not None:
         with open(output, "w", encoding="utf-8") as f:
-            json.dump({"players": players, "guilds": guilds}, f, indent=4, ensure_ascii=False)
+            json.dump(
+                {"players": players, "guilds": guilds}, f, indent=4, ensure_ascii=False
+            )
         log(f"Players: {len(players)}")
         log(f"Guilds: {len(guilds)}")
     else:
-        player_url: Any | str = urljoin(args.request, "player")
-        guild_url: Any | str = urljoin(args.request, "guild")
+        player_url: str = urljoin(args.request, "player")
+        guild_url: str = urljoin(args.request, "guild")
         log(f"Put players to {player_url} with Players: {len(players)}")
-        player_res: Response = request_get(url=player_url,
-                                           headers={"Authorization": f"Bearer {args.token}"},
-                                           json=players,
-                                           timeout=10)
+        player_res: Response = request_get(
+            player_url,
+            headers={"Authorization": f"Bearer {args.token}"},
+            json=players,
+            timeout=10,
+        )
         if player_res.status_code != 200:
-            log(f"Put Players data error: {player_res.text}")
+            log(f"Put Players data error: {player_res.text}", "ERROR")
 
         log(f"Put guilds to {guild_url} with Guilds: {len(guilds)}")
-        guild_res: Response = request_put(url=guild_url,
-                                          headers={"Authorization": f"Bearer {args.token}"},
-                                          json=guilds,
-                                          timeout=10)
+        guild_res: Response = request_put(
+            guild_url,
+            headers={"Authorization": f"Bearer {args.token}"},
+            json=guilds,
+            timeout=10,
+        )
         if guild_res.status_code != 200:
-            log(f"Put Guilds data error: {guild_res.text}")
+            log(f"Put Guilds data error: {guild_res.text}", "ERROR")
 
     try:
         if args.clear is not None:

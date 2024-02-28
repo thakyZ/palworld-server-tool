@@ -14,6 +14,7 @@ type Config struct {
 		Tls              bool     `mapstructure:"tls"`
 		CertPath         string   `mapstructure:"cert_path"`
 		KeyPath          string   `mapstructure:"key_path"`
+		PublicUrl        string   `mapstructure:"public_url"`
 		TrustedProxies   []string `mapstructure:"trusted_proxies"`
 		BroadcastAddress string   `mapstructure:"broadcast_address"`
 	}

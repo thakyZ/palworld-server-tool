@@ -1,7 +1,7 @@
 <h1 align='center'>幻兽帕鲁服务器管理工具</h1>
 
 <p align="center">
-   <strong>简体中文</strong> | <a href="/README.en.md">English</a>
+   <strong>简体中文</strong> | <a href="/README.en.md">English</a> | <a href="/README.ja.md">日本語</a>
 </p>
 
 <p align='center'>
@@ -22,7 +22,7 @@
 >
 > 当然深色模式也安排得妥妥的～
 
-基于 `Level.sav` 存档文件解析实现的功能及路线图：
+基于 `Level.sav` 存档文件解析实现的功能：
 
 - [x] 完整玩家数据
 - [x] 玩家帕鲁数据
@@ -35,6 +35,11 @@
 - [x] 踢出/封禁玩家
 - [x] 游戏内广播
 - [x] 平滑关闭服务器并广播消息
+
+工具额外提供的功能：
+
+- [x] 白名单管理
+- [x] 自定义 RCON 命令并执行
 
 本工具使用 bbolt 单文件存储，将 RCON 和 Level.sav 文件的数据通过定时任务获取并保存，提供简单的可视化界面和 REST 接口和便于管理与开发。
 
@@ -67,6 +72,11 @@ https://github.com/zaigie/palworld-server-tool/assets/17232619/7a861091-94ee-4ef
 
 ## 如何开启私服 RCON
 
+> [!CAUTION]
+> 游戏服务器 v0.1.5.0 版本中，PalWorldSettings.ini 中的 RCONPort 和 RCONEnable **不生效**
+>
+> 请在 `./PalServer.sh` (Linux) 或 `PalServer.exe` (Windows) 后添加 -RCONPort=25575 来开启
+
 需要开启服务器的 RCON 功能，如果你的私服教程有写更好，没有的话，修改 `PalWorldSettings.ini` 文件
 
 **也就是修改游戏内各种倍数、概率的那个文件**，里面最后的位置有如下：
@@ -84,9 +94,7 @@ AdminPassword=...,...,RCONEnabled=true,RCONPort=25575
 - [Sealos 一键部署](#sealos-一键部署)
 - [文件部署](#文件部署)
   - [Linux](#linux)
-    - [pst-agent 部署](./README.agent.md#linux)
   - [Windows](#windows)
-    - [pst-agent 部署](./README.agent.md#windows)
 - [Docker 部署](#docker-部署)
   - [单体部署](#单体部署)
   - [Agent 部署](#agent-部署)
@@ -95,7 +103,7 @@ AdminPassword=...,...,RCONEnabled=true,RCONPort=25575
 
 请确保前提 [开启私服 RCON](#如何开启私服-rcon)
 
-> 解析 `Level.sav` 存档的任务需要在短时间（<20s）耗费一定的系统内存（1GB~3GB），这部分内存会在执行完解析任务后释放，因此你至少需要确保你的服务器有充足的内存。若不满足可使用如下等方式
+> 解析 `Level.sav` 存档的任务需要在短时间（<20s）耗费一定的系统内存（1GB~3GB），这部分内存会在执行完解析任务后释放，因此你至少需要确保你的服务器有充足的内存。
 
 这里**默认为将 pst 工具和游戏服务器放在同一台物理机上**，在一些情况下你可能不想要它们部署在同一机器上：
 
@@ -122,7 +130,6 @@ AdminPassword=...,...,RCONEnabled=true,RCONPort=25575
 请在以下地址下载最新版可执行文件
 
 - [Github Releases](https://github.com/zaigie/palworld-server-tool/releases)
-- [(国内) Gitee Releases](https://gitee.com/jokerwho/palworld-server-tool/releases)
 
 #### Linux
 
@@ -130,7 +137,7 @@ AdminPassword=...,...,RCONEnabled=true,RCONPort=25575
 
 ```bash
 # 下载 pst_{version}_{platform}_{arch}.tar.gz 文件并解压到 pst 目录
-mkdir -p pst && tar -xzf pst_v0.5.4_linux_x86_64.tar.gz -C pst
+mkdir -p pst && tar -xzf pst_v0.5.7_linux_x86_64.tar.gz -C pst
 ```
 
 ##### 配置
@@ -147,23 +154,45 @@ mkdir -p pst && tar -xzf pst_v0.5.4_linux_x86_64.tar.gz -C pst
    关于其中的 `decode_path`，一般就是解压后的 pst 目录加上 `sav_cli` ，如果不知道绝对路径，在终端执行 `pwd` 即可
 
    ```yaml
-   web: # web 相关配置
-     password: "" # web 管理模式密码
-     port: 8080 # web 服务端口
-     tls: false # 是否开启 TLS
-     cert_path: "" # Cert 文件路径
-     key_path: "" # Key 文件路径
-   rcon: # RCON 相关配置
-     address: "127.0.0.1:25575" # RCON 地址
-     password: "" # 设置的 AdminPassword
-     timeout: 5 # 请求 RCON 超时时间，推荐 <= 5
-     sync_interval: 60 # 定时向 RCON 服务获取玩家在线情况的间隔，单位秒
-   save: # 存档文件解析相关配置
-     path: "/path/to/your/Pal/Saved" # 存档文件路径
-     decode_path: "/path/to/your/sav_cli" # 存档解析工具路径，一般和 pst 在同一目录
-     sync_interval: 120 # 定时从存档获取数据的间隔，单位秒，推荐 >= 120
-   manage: # 管理相关
-     kick_non_whitelist: false # 玩家不在白名单是否自动踢出
+   # WebUI 设置
+   web:
+     # WebUI 管理员密码
+     password: ""
+     # WebUI 访问端口
+     port: 8080
+     # 是否开启使用 HTTPS TLS 访问
+     tls: false
+     # TLS Cert 如果开启使用 HTTPS 请输入证书文件路径
+     cert_path: ""
+     # TLS Key 如果开启使用 HTTPS 请输入证书密钥文件路径
+     key_path: ""
+     # 若开启 HTTPS 访问请填写你的 HTTPS 证书绑定的域名 eg. https://yourdomain.com
+     public_url: ""
+
+   # RCON 相关设置
+   rcon:
+     # RCON 的地址和端口
+     address: "127.0.0.1:25575"
+     # 服务 端设置的 RCON AdminPassword
+     password: ""
+     # RCON 通信超时时间，推荐 <= 5
+     timeout: 5
+     # 定时向 RCON 服务获取玩家在线情况的间隔，单位秒
+     sync_interval: 60
+
+   # sav_cli Config 存档文件解析相关配置
+   save:
+     # 存档文件路径
+     path: "/path/to/your/Pal/Saved"
+     # Sav_cli Path 存档解析工具路径，一般和 pst 在同一目录
+     decode_path: "/path/to/your/sav_cli"
+     # Sav Decode Interval Sec 定时从存档获取数据的间隔，单位秒，推荐 >= 120
+     sync_interval: 120
+
+   # Automation Config 自动化管理相关
+   manage:
+     # 玩家不在白名单是否自动踢出
+     kick_non_whitelist: false
    ```
 
 ##### 运行
@@ -209,7 +238,7 @@ kill $(ps aux | grep 'pst' | awk '{print $2}') | head -n 1
 
 ##### 下载解压
 
-解压 `pst_v0.5.4_windows_x86_64.zip` 到任意目录（推荐命名文件夹目录名称为 `pst`）
+解压 `pst_v0.5.7_windows_x86_64.zip` 到任意目录（推荐命名文件夹目录名称为 `pst`）
 
 ##### 配置
 
@@ -227,23 +256,45 @@ kill $(ps aux | grep 'pst' | awk '{print $2}') | head -n 1
 > 还有比较重要的是，请确保 `config.yaml` 文件为 **ANSI 编码**，其它编码格式将会导致路径错误等问题！！
 
 ```yaml
-web: # web 相关配置
-  password: "" # web 管理模式密码
-  port: 8080 # web 服务端口
-  tls: false # 是否开启 TLS
-  cert_path: "" # Cert 文件路径
-  key_path: "" # Key 文件路径
-rcon: # RCON 相关配置
-  address: "127.0.0.1:25575" # RCON 地址
-  password: "" # 设置的 AdminPassword
-  timeout: 5 # 请求 RCON 超时时间，推荐 <= 5
-  sync_interval: 60 # 定时向 RCON 服务获取玩家在线情况的间隔，单位秒
-save: # 存档文件解析相关配置
-  path: "C:\\path\\to\\your\\Pal\\Saved" # 存档文件路径
-  decode_path: "C:\\path\\to\\your\\sav_cli.exe" # 存档解析工具路径，一般和 pst 在同一目录
-  sync_interval: 120 # 定时从存档获取数据的间隔，单位秒，推荐 >= 120
-manage: # 管理相关
-  kick_non_whitelist: false # 玩家不在白名单是否自动踢出
+# WebUI 设置
+web:
+  # WebUI 管理员密码
+  password: ""
+  # WebUI 访问端口
+  port: 8080
+  # 是否开启使用 HTTPS TLS 访问
+  tls: false
+  # TLS Cert 如果开启使用 HTTPS 请输入证书文件路径
+  cert_path: ""
+  # TLS Key 如果开启使用 HTTPS 请输入证书密钥文件路径
+  key_path: ""
+  # 若开启 HTTPS 访问请填写你的 HTTPS 证书绑定的域名 eg. https://yourdomain.com
+  public_url: ""
+
+# RCON 相关设置
+rcon:
+  # RCON 的地址和端口
+  address: "127.0.0.1:25575"
+  # 服务 端设置的 RCON AdminPassword
+  password: ""
+  # RCON 通信超时时间，推荐 <= 5
+  timeout: 5
+  # 定时向 RCON 服务获取玩家在线情况的间隔，单位秒
+  sync_interval: 60
+
+# sav_cli Config 存档文件解析相关配置
+save:
+  # 存档文件路径
+  path: "C:\\path\\to\\your\\Pal\\Saved"
+  # Sav_cli Path 存档解析工具路径，一般和 pst 在同一目录
+  decode_path: "C:\\path\\to\\your\\sav_cli.exe"
+  # Sav Decode Interval Sec 定时从存档获取数据的间隔，单位秒，推荐 >= 120
+  sync_interval: 120
+
+# Automation Config 自动化管理相关
+manage:
+  # 玩家不在白名单是否自动踢出
+  kick_non_whitelist: false
 ```
 
 ##### 运行
@@ -353,7 +404,6 @@ touch pst.db
 ```bash
 docker run -d --name pst-agent \
 -p 8081:8081 \
--m 256M --memory-swap=4G `# 可选参数 设置可用内存为256M 交换分区为4G` \
 -v /path/to/your/Pal/Saved:/game \
 -e SAV_FILE="/game" \
 jokerwho/palworld-server-tool-agent:latest

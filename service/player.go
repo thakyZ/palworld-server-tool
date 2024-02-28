@@ -35,10 +35,9 @@ func PutPlayers(db *bbolt.DB, players []database.Player) error {
 				if existingPlayer.SteamId != "" {
 					p.SteamId = existingPlayer.SteamId
 				}
-				emptyTime := time.Time{}
-				if existingPlayer.LastOnline != emptyTime {
-					p.LastOnline = existingPlayer.LastOnline
-				}
+			}
+			if p.SaveLastOnline != "" {
+				p.LastOnline, _ = time.Parse(time.RFC3339, p.SaveLastOnline)
 			}
 			v, err := json.Marshal(p)
 			if err != nil {
@@ -305,8 +304,13 @@ func PutWhitelist(db *bbolt.DB, players []database.PlayerW) error {
 			if err != nil {
 				return err
 			}
-			// 生成新玩家的唯一键，这里假设player.PlayerUID是唯一的
-			if err := b.Put([]byte(player.PlayerUID), playerData); err != nil {
+			identifier := player.PlayerUID
+			if identifier == "" {
+				if identifier = player.SteamID; identifier == "" {
+					continue
+				}
+			}
+			if err := b.Put([]byte(identifier), playerData); err != nil {
 				return err
 			}
 		}

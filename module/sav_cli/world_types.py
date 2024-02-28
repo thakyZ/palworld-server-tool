@@ -3,9 +3,8 @@
 """World Types Module"""
 
 from typing import Any, Literal
+from datetime import datetime, timezone
 from uuid import UUID
-from .logger import log
-from .pal_skills import PalSkills
 from .pal_type import PalType
 
 
@@ -25,6 +24,23 @@ def hex_uuid_to_decimal(uuid: str | UUID | Any) -> str:
         decimal_number = int(hex_part, 16)
         return str(decimal_number)
     return str(uuid.int)
+
+
+def tick2local(tick: int, real_date_time_ticks: int, filetime: int) -> str:
+    """Converts tick to local server time against the time that a file has changed.
+
+    Args:
+        tick (int): Current tick increment
+        real_date_time_ticks (int): The real date time of call time as ticks.
+        filetime (int): The time that the file has changed.
+
+    Returns:
+        str: Timestamp string fitting RFC3339 like 2006-01-02T15:04:05Z07:00
+    """
+    ts = filetime + (tick - real_date_time_ticks) / 1e7
+    # to RFC3339 like 2006-01-02T15:04:05Z07:00
+    t = datetime.fromtimestamp(ts, tz=timezone.utc)
+    return t.strftime(r"%Y-%m-%dT%H:%M:%SZ%z").replace("+0000", "")
 
 
 # pylint: disable-next=R0902,R0903
@@ -61,7 +77,7 @@ class Player:
             s["StatusName"]["value"]: s["StatusPoint"]["value"]
             for s in data["GotStatusPointList"]["value"]["values"]
         }
-        full_stomach: float | int = (
+        full_stomach: float | int | Literal[0] = (
             float(data["FullStomach"]["value"]) if data.get("FullStomach") else 0
         )
         self.full_stomach: float | int = round(full_stomach, 2)
@@ -109,7 +125,7 @@ class Pal:
         self.max_hp: int = (
             int(data["MaxHP"]["value"]["Value"]["value"]) if data.get("MaxHP") else 0
         )
-        self.gender: str = (
+        self.gender: str | Literal["Unknow"] = (
             data["Gender"]["value"]["value"].split("::")[-1]
             if data.get("Gender")
             else "Unknow"
@@ -130,7 +146,7 @@ class Pal:
         else:
             self.is_tower = False
             self.type = "Unknow"
-        self.workspeed: float | int = (
+        self.workspeed: float | int | Literal[0] = (
             data["CraftSpeed"]["value"] if data.get("CraftSpeed") else 0
         )
         self.melee: int = (
@@ -143,8 +159,8 @@ class Pal:
             int(data["Talent_Defense"]["value"]) if data.get("Talent_Defense") else 0
         )
         self.rank: int = int(data["Rank"]["value"]) if data.get("Rank") else 1
-        self.skills: list[str] = (
-            self.trans_skill(data["PassiveSkillList"]["value"]["values"])
+        self.skills: list[str | Any] = (
+            data["PassiveSkillList"]["value"]["values"]
             if data.get("PassiveSkillList")
             else []
         )
@@ -169,25 +185,6 @@ class Pal:
             "skills",
         ]
 
-    def trans_skill(self, skill_values: list[str]) -> list[str]:
-        """Transfers the skills from the `PalSkills` enum that match that which are in the parameter
-           `skill_values` and returns them as a string of list.
-
-        Args:
-            skill_values (list[str]): The value of skills to gra from the `PalSkills` enum.
-
-        Returns:
-            list[str]: The skills that match the argument.
-        """
-        skills: list[str] = []
-        for skill in skill_values:
-            if skill in PalSkills.__members__:
-                skills.append(PalSkills[skill].value)
-            else:
-                skills.append(skill)
-                log(f"Unknown skill {skill}", "WARN")
-        return skills
-
     def to_dict(self) -> dict[str, Any]:
         """Converts itself to a dictionary.
 
@@ -201,9 +198,10 @@ class Pal:
         }
 
 
+# pylint: disable-next=R0903
 class Guild:
     """Class containing guild data."""
-    def __init__(self, data: dict[str, Any]) -> None:
+    def __init__(self, data: dict[str, Any], real_date_time_ticks: int, filetime: int) -> None:
         self.name: str = data["guild_name"]
         self.base_camp_level: int = data["base_camp_level"]
         self.admin_player_uid: str = hex_uuid_to_decimal(data["admin_player_uid"])
@@ -211,6 +209,15 @@ class Guild:
             {
                 "player_uid": hex_uuid_to_decimal(player["player_uid"]),
                 "nickname": player["player_info"]["player_name"],
+                "last_online": (
+                    tick2local(
+                        player["player_info"]["last_online_real_time"],
+                        real_date_time_ticks,
+                        filetime,
+                    )
+                    if player["player_info"].get("last_online_real_time")
+                    else ""
+                ),
             }
             for player in data["players"]
         ]

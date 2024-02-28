@@ -171,6 +171,8 @@ def structure_player(converted: dict[str, Any]) -> list[dict[str, Any]]:
         if c.get("IsPlayer") and c["IsPlayer"]["value"]:
             players.append(Player(uid, c).to_dict())
         else:
+            if not c.get("OwnerPlayerUId"):
+                continue
             pals.append(Pal(c).to_dict())
     for pal in pals:
         for player in players:
@@ -182,17 +184,20 @@ def structure_player(converted: dict[str, Any]) -> list[dict[str, Any]]:
     return list(sorted_players)
 
 
-def structure_guild(converted: dict[str, Any]) -> list[dict[str, Any]]:
+def structure_guild(converted: dict[str, Any], filetime: int = -1) -> list[dict[str, Any]]:
     """NOTE: Requires documentation from the original owner."""
     log("Structuring guilds...")
     if not converted["worldSaveData"]["value"].get("GroupSaveDataMap"):
         return []
+    real_date_time_ticks = converted["worldSaveData"]["value"]["GameTimeSaveData"][
+        "value"
+    ]["RealDateTimeTicks"]["value"]
     groups = (
         g["value"]["RawData"]["value"]
         for g in converted["worldSaveData"]["value"]["GroupSaveDataMap"]["value"]
         if g["value"]["GroupType"]["value"]["value"] == "EPalGroupType::Guild"
     )
-    guilds_generator: GuildGeneratorType = (Guild(g).to_dict() for g in groups)
+    guilds_generator: GuildGeneratorType = (Guild(g, real_date_time_ticks, filetime).to_dict() for g in groups)
     sorted_guilds: list[Any] = sorted(
         guilds_generator, key=lambda g: g["base_camp_level"], reverse=True
     )

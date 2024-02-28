@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -41,7 +42,11 @@ func main() {
 		os.MkdirAll(cacheDir, os.ModePerm)
 
 		destFile := filepath.Join(cacheDir, "Level.sav")
-		copyFile(viper.GetString("sav_file"), destFile)
+		copyStatus := copyFile(viper.GetString("sav_file"), destFile)
+		if !copyStatus {
+			c.Redirect(http.StatusFound, "/404")
+			return
+		}
 
 		c.File(destFile)
 	})
@@ -64,23 +69,27 @@ func main() {
 	r.Run(":" + strconv.Itoa(port))
 }
 
-func copyFile(src, dst string) {
+func copyFile(src, dst string) bool {
 	source, err := os.Open(src)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return false
 	}
 	defer source.Close()
 
 	destination, err := os.Create(dst)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return false
 	}
 	defer destination.Close()
 
 	_, err = io.Copy(destination, source)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return false
 	}
+	return true
 }
 
 // limitCacheFiles keeps only the latest `n` files in the cache directory
@@ -95,21 +104,18 @@ func limitCacheFiles(cacheDir string, n int) {
 		return
 	}
 
-	var fileInfos []os.DirEntry
-	for _, file := range files {
-		if !file.IsDir() {
-			fileInfos = append(fileInfos, file)
-		}
-	}
-
-	sort.Slice(fileInfos, func(i, j int) bool {
-		infoI, _ := fileInfos[i].Info()
-		infoJ, _ := fileInfos[j].Info()
+	sort.Slice(files, func(i, j int) bool {
+		infoI, _ := files[i].Info()
+		infoJ, _ := files[j].Info()
 		return infoI.ModTime().After(infoJ.ModTime())
 	})
 
 	// Delete files that exceed the limit
-	for i := n; i < len(fileInfos); i++ {
-		os.Remove(filepath.Join(cacheDir, fileInfos[i].Name()))
+	for i := n; i < len(files); i++ {
+		path := filepath.Join(cacheDir, files[i].Name())
+		err = os.RemoveAll(path)
+		if err != nil {
+			fmt.Println("delete files path", path, err)
+		}
 	}
 }

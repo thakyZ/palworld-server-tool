@@ -44,6 +44,7 @@ type TersePlayer struct {
 	MaxStatusPoint int32            `json:"max_status_point"`
 	StatusPoint    map[string]int32 `json:"status_point"`
 	FullStomach    float64          `json:"full_stomach"`
+	SaveLastOnline string           `json:"save_last_online"`
 	PlayerRcon
 }
 
@@ -64,4 +65,14 @@ type PlayerW struct {
 	Name      string `json:"name"`
 	SteamID   string `json:"steam_id"`
 	PlayerUID string `json:"player_uid"`
+}
+
+type RconCommand struct {
+	Command string `json:"command"`
+	Remark  string `json:"remark"`
+}
+
+type RconCommandList struct {
+	UUID string `json:"uuid"`
+	RconCommand
 }
