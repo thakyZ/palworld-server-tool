@@ -1,8 +1,11 @@
-import os
+#!/usr/bin/env python3
+
+"""Structure Model Module"""
+
 import sys
 import zlib
 import json
-from typing import Any, Callable
+from typing import Any, Callable, Generator
 
 from palworld_save_tools.gvas import GvasFile
 from palworld_save_tools.palsav import decompress_sav_to_gvas
@@ -10,8 +13,8 @@ from palworld_save_tools.paltypes import PALWORLD_TYPE_HINTS
 from palworld_save_tools.archive import FArchiveReader, FArchiveWriter
 from palworld_save_tools.rawdata import character, group
 
-from world_types import Player, Pal, Guild
-from logger import log
+from .world_types import Player, Pal, Guild
+from .logger import log
 
 PALWORLD_CUSTOM_PROPERTIES: dict[
     str,
@@ -27,10 +30,13 @@ PALWORLD_CUSTOM_PROPERTIES: dict[
     ),
 }
 
+GuildGeneratorType = Generator[dict[str, str], Any, None]
+
 
 def skip_decode(
     reader: FArchiveReader, type_name: str, size: int, path: str
 ) -> dict[str, Any]:
+    """NOTE: Requires documentation from the original owner."""
     if type_name == "ArrayProperty":
         array_type = reader.fstring()
         value = {
@@ -59,7 +65,7 @@ def skip_decode(
             "value": reader.read(size),
         }
     else:
-        raise Exception(
+        raise TypeError(
             f"Expected ArrayProperty or MapProperty or StructProperty, got {type_name} in {path}"
         )
     return value
@@ -68,6 +74,7 @@ def skip_decode(
 def skip_encode(
     writer: FArchiveWriter, property_type: str, properties: dict[str, Any]
 ) -> int:
+    """NOTE: Requires documentation from the original owner."""
     if property_type == "ArrayProperty":
         del properties["custom_type"]
         del properties["skip_type"]
@@ -92,7 +99,7 @@ def skip_encode(
         writer.write(properties["value"])
         return len(properties["value"])
     else:
-        raise Exception(
+        raise TypeError(
             f"Expected ArrayProperty or MapProperty or StructProperty, got {property_type}"
         )
 
@@ -123,7 +130,8 @@ PALWORLD_CUSTOM_PROPERTIES[".worldSaveData.CharacterContainerSaveData"] = (
 )
 
 
-def convert_sav(file):
+def convert_sav(file: str) -> str | dict[str, Any]:
+    """NOTE: Requires documentation from the original owner."""
     if file.endswith(".sav.json"):
         log("Loading...")
         with open(file, "r", encoding="utf-8") as f:
@@ -131,9 +139,9 @@ def convert_sav(file):
     log("Converting...")
     try:
         with open(file, "rb") as f:
-            data = f.read()
+            data: bytes = f.read()
             raw_gvas, _ = decompress_sav_to_gvas(data)
-        gvas_file = GvasFile.read(
+        gvas_file: GvasFile = GvasFile.read(
             raw_gvas, PALWORLD_TYPE_HINTS, PALWORLD_CUSTOM_PROPERTIES
         )
     except zlib.error:
@@ -143,11 +151,12 @@ def convert_sav(file):
     return gvas_file.properties
 
 
-def structure_player(converted):
+def structure_player(converted: dict[str, Any]) -> list[dict[str, Any]]:
+    """NOTE: Requires documentation from the original owner."""
     log("Structuring players...")
     if not converted["worldSaveData"]["value"].get("CharacterSaveParameterMap"):
         return []
-    uid_character = (
+    uid_character: Generator[Any, Any, Any] = (
         (
             c["key"]["PlayerUId"]["value"],
             c["value"]["RawData"]["value"]["object"]["SaveParameter"]["value"],
@@ -156,8 +165,8 @@ def structure_player(converted):
             "value"
         ]
     )
-    players = []
-    pals = []
+    players: list[dict[str, Any]] = []
+    pals: list[dict[str, Any]] = []
     for uid, c in uid_character:
         if c.get("IsPlayer") and c["IsPlayer"]["value"]:
             players.append(Player(uid, c).to_dict())
@@ -169,11 +178,12 @@ def structure_player(converted):
                 pal.pop("owner")
                 player["pals"].append(pal)
                 break
-    sorted_players = sorted(players, key=lambda p: p["level"], reverse=True)
+    sorted_players: list[dict[str, Any]] = sorted(players, key=lambda p: p["level"], reverse=True)
     return list(sorted_players)
 
 
-def structure_guild(converted):
+def structure_guild(converted: dict[str, Any]) -> list[dict[str, Any]]:
+    """NOTE: Requires documentation from the original owner."""
     log("Structuring guilds...")
     if not converted["worldSaveData"]["value"].get("GroupSaveDataMap"):
         return []
@@ -182,25 +192,34 @@ def structure_guild(converted):
         for g in converted["worldSaveData"]["value"]["GroupSaveDataMap"]["value"]
         if g["value"]["GroupType"]["value"]["value"] == "EPalGroupType::Guild"
     )
-    guilds_generator = (Guild(g).to_dict() for g in groups)
-    sorted_guilds = sorted(
+    guilds_generator: GuildGeneratorType = (Guild(g).to_dict() for g in groups)
+    sorted_guilds: list[Any] = sorted(
         guilds_generator, key=lambda g: g["base_camp_level"], reverse=True
     )
     return list(sorted_guilds)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """NOTE: Requires documentation from the original owner."""
+    # pylint: disable-next=C0415
     import time
 
-    start = time.time()
-    file = "./Level.sav"
-    converted = convert_sav(file)
-    players = structure_player(converted)
+    start: float = time.time()
+    file: str = "./Level.sav"
+    converted: dict[str, Any] | str = convert_sav(file)
+    if isinstance(converted, str):
+        log("Reading json file returned as typeof string", "ERROR")
+        sys.exit(1)
+    players: list[dict[str, Any]] = structure_player(converted)
     log("Saving players...")
     with open("players.json", "w", encoding="utf-8") as f:
         json.dump(players, f, indent=4, ensure_ascii=False)
-    guilds = structure_guild(converted)
+    guilds: list[dict[str, Any]] = structure_guild(converted)
     log("Saving guilds...")
     with open("guilds.json", "w", encoding="utf-8") as f:
         json.dump(guilds, f, indent=4, ensure_ascii=False)
     log(f"Done in {time.time() - start}s")
+
+
+if __name__ == "__main__":
+    main()

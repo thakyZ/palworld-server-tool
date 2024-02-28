@@ -1,0 +1,23 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[master]
+name = "sav_cli"
+version = "0.1.0"
+packages = [{ include = "sav_cli" }]
+
+[tool.poetry.scripts]
+start = "main:start"
+build = "sav_cli.pyinstaller:install"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.12"
+palworld_save_tools = "*"
+requests = "*"
+mypy = "*"
+
+[tool.poetry.group.dev.dependencies]
+pyinstaller = "^5.10.1"
+pytest = "^7.3.1"
+palworld_save_tools_stubs = "git+https://github.com/thakyz/palworld-save-tools-stubs.git"
