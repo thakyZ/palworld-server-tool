@@ -1,12 +1,27 @@
 {
-  "terminal.integrated.env.osx": {
-    "PYTHONPATH": "${PYTHONPATH}:${workspaceFolder}/module/"
-  },
-  "terminal.integrated.env.linux": {
-    "PYTHONPATH": "${PYTHONPATH}:${workspaceFolder}/module/"
-  },
-  "terminal.integrated.env.windows": {
-    "PYTHONPATH": "${PYTHONPATH};${workspaceFolder}/module/"
-  },
-  "pylint.cwd": "${workspaceFolder}/module/"
+  "python.defaultInterpreterPath": "${workspaceFolder}/module/env/Scripts/python",
+  "mypy-type-checker.path": [
+    "${workspaceFolder}/module/env/Scripts/mypy"
+  ],
+  "mypy-type-checker.cwd": "${workspaceFolder}/module/",
+  "pylint.path": [
+    "${workspaceFolder}/module/env/Scripts/mypy"
+  ],
+  "pylint.cwd": "${workspaceFolder}/module/",
+  "isort.path": [
+    "${workspaceFolder}/module/env/Scripts/isort"
+  ],
+  "isort.cwd": "${workspaceFolder}/module/",
+  "flake8.path": [
+    "${workspaceFolder}/module/env/Scripts/flake8"
+  ],
+  "flake8.cwd": "${workspaceFolder}/module/",
+  "autopep8.path": [
+    "${workspaceFolder}/module/env/Scripts/autopep8"
+  ],
+  "autopep8.importStrategy": "fromEnvironment",
+  "black-formatter.path": [
+    "${workspaceFolder}/module/env/Scripts/black"
+  ],
+  "black-formatter.cwd": "${workspaceFolder}/module/",
 }
