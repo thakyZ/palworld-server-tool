@@ -1,7 +1,10 @@
 {
   "version": "0.2",
   "ignorePaths": [
-    "pnpm-lock.yaml"
+    "pnpm-lock.yaml",
+    "go.sum",
+    "poetry.lock",
+    "requirements.txt"
   ],
   "dictionaries": [
     "en_US",
@@ -46,9 +49,36 @@
     "workspeed",
     "palsav",
     "paltypes",
-    "rawdata"
+    "rawdata",
+    "dgrijalva", // Name of a user.
+    "godoc",
+    "psutil",
+    "nohup",
+    "ansiterm",
+    "winio",
+    "PuerkitoBio",
+    "purell",
+    "Typeflag",
+    "corev1",
+    "urlesc",
+    "armon",
+    "armon",
+    "bytedance",
+    "cenkalti",
+    "clientset",
+    "",
+    "metav1",
+    "NewSPDYExecutor",
+    "remotecommand",
+    "podname",
+    "bbolt",
+    "Rimer",
+    "jokerwho",
+    "gorcon"
   ],
-  "ignoreWords": [],
+  "ignoreWords": [
+    "--onefile"
+  ],
   "ignoreRegExpList": [
     "(?<=@|\\))sachinraja(?=\\/eslint-config|\\()",
     "(?<=@|\\)||@)vicons(?=\\/|\\(|\\\\)",
@@ -58,7 +88,17 @@
     "(?<=@|\\)||@)vueuse(?=\\/|\\(|\\\\)",
     "(?<=@|\\))rushstack(?=\\/|\\()",
     "(?<=logger\\.|\\))Infof",
-    "(?<=reader\\.|writer\\.|\\))fstring"
+    "(?<=reader\\.|writer\\.|\\))fstring",
+    "/\\brcons?\\b|(?<=\\\\|\\))brcons(?=\\?|\\()/",
+    "/gocron\\./",
+    "/(?<=\\/|\\))gocron(?=\\\\|\\()|github\\.com\\/go-co-op\\/gocron\\/v2/",
+    "/(?<=&|\\*| |\\)|go\\.etcd\\.io\\/)bbolt(?=\\.|\\(|\\\")/",
+    "/(?<=github\\.com\\/|\\/|\\))gorcon(?=\/rcon|\\()/",
+    "/(Info|Debug|Warn|Error)f/",
+    "mapstructure(?=:|\\()",
+    "(?<=S12|\\))ASNDDSAIF(?=813412EERGH1EF134|813412|\\()|(?<=S12ASNDDSAIF813412|813412|\\))EERGH(?=813412EERGH1EF134|1EF134|\\()",
+    "(?<=k8s\\.io\\/client-go\\/tools\\/|\\))remotecommand",
+    "(?<=service|\\)|=)account|service(?=account|\\(|\\|)"
   ],
   "import": []
 }

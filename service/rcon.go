@@ -1,5 +1,7 @@
 package service
 
+// cSpell:word ApiMachinery
+
 import (
 	"encoding/json"
 

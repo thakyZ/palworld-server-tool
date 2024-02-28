@@ -28,6 +28,7 @@ Process {
     Throw "PowerShell script ``activate$($ScriptExtension)`` not found on local environment path."
   }
   & "$($LocalActivateVenv)"
+  & "$($OhMyPosh)" "init" "pwsh" | Invoke-Expression
   $LocalPython = (Get-Item -LiteralPath (Join-Path -Path $PWD -ChildPath "env" -AdditionalChildPath @("Scripts", "python$($ProgramExtension)")) -ErrorAction SilentlyContinue);
   If ($Null -eq $LocalPython) {
     Throw "Program python$($ProgramExtension) not found on local environment path."

@@ -4,18 +4,18 @@ GIT_TAG:=$(shell git describe --tags --abbrev=0)
 PREFIX:=pst_${GIT_TAG}
 
 .PHONY: init
-# 初始化
+# 初始化 - Initialization
 init:
 	go mod download
 
 .PHONY: build
-# 构建
+# 构建 - Build
 build:
 	rm -rf dist/ && mkdir -p dist/
 	go build -o ./dist/pst main.go
 
 .PHONY: build-all
-# 为所有平台构建，确保 module/dist 中有所有平台的 sav_cli
+# 为所有平台构建，确保 module/dist 中有所有平台的 sav_cli - Build for all platforms, make sure you have sav_cli for all platforms in module/dist
 build-all:
 	rm -rf dist/ && mkdir -p dist/
 
@@ -45,7 +45,7 @@ build-all:
 	cp script/start.bat dist/windows_x86_64/start.bat
 
 	cd dist && zip -p -r ${PREFIX}_windows_x86_64.zip windows_x86_64/* && tar -czf ${PREFIX}_linux_x86_64.tar.gz linux_x86_64/* && tar -czf ${PREFIX}_linux_aarch64.tar.gz linux_aarch64/* && tar -czf ${PREFIX}_darwin_arm64.tar.gz darwin_arm64/* && cd ..
-# show help
+# Show help
 help:
 	@echo ''
 	@echo 'Usage:'

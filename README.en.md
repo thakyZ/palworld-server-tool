@@ -4,7 +4,7 @@
    <a href="/README.md">简体中文</a> | <strong>English</strong> | <a href="/README.ja.md">日本語</a>
 </p>
 
-<p align='center'> 
+<p align='center'>
   Manage your Palworld dedicated server through a visual interface and REST API, using SAV file parsing and RCON functionalities.<br/>
   And it took a long and boring time to i18n...
 </p>
@@ -47,20 +47,20 @@ Due to limited maintenance and development staff, we welcome front-end, back-end
 
 ## Function screenshot
 
-https://github.com/zaigie/palworld-server-tool/assets/17232619/42d4c5db-8799-4962-b762-ae22eebbfeb9
+[https://github.com/zaigie/palworld-server-tool/assets/17232619/42d4c5db-8799-4962-b762-ae22eebbfeb9](https://github.com/zaigie/palworld-server-tool/assets/17232619/42d4c5db-8799-4962-b762-ae22eebbfeb9)
 
 ### Desktop
 
-|                              |                              |
-| :--------------------------: | :--------------------------: |
-| ![](./docs/img/pst-en-2.png) | ![](./docs/img/pst-en-4.png) |
+|                                                                    |                                                                    |
+| :----------------------------------------------------------------: | :----------------------------------------------------------------: |
+| ![Screenshot of the Palworld Server Tool](./docs/img/pst-en-2.png) | ![Screenshot of the Palworld Server Tool](./docs/img/pst-en-4.png) |
 
-![](./docs/img/pst-en-3.png)
+![Screenshot of the Palworld Server Tool](./docs/img/pst-en-3.png)
 
 ### Mobile
 
 <p align="center">
-<img src="./docs/img/pst-en-m-1.png" width="30%" /><img src="./docs/img/pst-en-m-2.png" width="30%" /><img src="./docs/img/pst-en-m-3.png" width="30%" />
+  <img src="./docs/img/pst-en-m-1.png" width="30%" alt="Screenshot of the Palworld Server Tool" /><img src="./docs/img/pst-en-m-2.png" width="30%" alt="Screenshot of the Palworld Server Tool" /><img src="./docs/img/pst-en-m-3.png" width="30%" alt="Screenshot of the Palworld Server Tool" />
 </p>
 
 ## How to Enable RCON for Private Servers
@@ -87,7 +87,7 @@ Please **shut down the server before making modifications**. Set an AdminPasswor
 - [File Deployment](#file-deployment)
   - [Linux](#linux)
   - [Windows](#windows)
-- [Docker Depolyment](#docker-deployment)
+- [Docker Deployment](#docker-deployment)
   - [Monolithic Deployment](#monolithic-deployment)
   - [Agent Deployment](#agent-deployment)
   - [Synchronizing Archives from k8s-pod](#synchronizing-archives-from-k8s-pod)
@@ -113,14 +113,14 @@ Download the latest executable files at:
 
 #### Linux
 
-##### Download and Extract
+##### Linux - Download and Extract
 
 ```bash
 # Download pst_{version}_{platform}_{arch}.tar.gz and extract to the pst directory
 mkdir -p pst && tar -xzf pst_v0.5.7_linux_x86_64.tar.gz -C pst
 ```
 
-##### Configuration
+##### Linux - Configuration
 
 1. Open the directory and allow execution
 
@@ -175,7 +175,7 @@ mkdir -p pst && tar -xzf pst_v0.5.7_linux_x86_64.tar.gz -C pst
      kick_non_whitelist: false
    ```
 
-##### Run
+##### Linux - Running
 
 ```bash
 ./pst
@@ -203,11 +203,11 @@ tail -f server.log
 kill $(ps aux | grep 'pst' | awk '{print $2}') | head -n 1
 ```
 
-##### Access
+##### Linux - Access
 
-Access via browser at http://127.0.0.1:8080 or http://{Local Network IP}:8080
+Access via browser at http:\/\/127.0.0.1:8080 or http:\/\/{Local Network IP}:8080
 
-Access at http://{Server IP}:8080 after opening firewall and security group in cloud servers.
+Access at http:\/\/{Server IP}:8080 after opening firewall and security group in cloud servers.
 
 > [!WARNING]
 > If you open the file for the first time, nothing will be displayed. Please **wait until the first sav archive synchronization is complete**
@@ -216,11 +216,11 @@ Access at http://{Server IP}:8080 after opening firewall and security group in c
 
 #### Windows
 
-##### Download and Extract
+##### Windows - Download and Extract
 
 Extract `pst_v0.5.7_windows_x86_64.zip` to any directory (recommend naming the folder `pst`).
 
-##### Configuration
+##### Windows - Configuration
 
 Find the `config.yaml` file in the extracted directory and modify it according to the instructions.
 
@@ -228,7 +228,7 @@ For `decode_path`, it's typically the pst directory plus `sav_cli.exe`.
 
 You can also right-click - "Properties", view the path and file name, and then concatenate them. (Same for archive file path and tool path)
 
-![](./docs/img/windows_path.png)
+![Screenshot of Windows File Properties dialog](./docs/img/windows_path.png)
 
 > [!WARNING]
 > Instead of pasting the copied path directly into `config.yaml`, add another '\\' in front of all '\\', as shown below
@@ -277,7 +277,7 @@ manage:
   kick_non_whitelist: false
 ```
 
-##### Running
+##### Windows - Running
 
 Two ways to run on Windows:
 
@@ -300,11 +300,11 @@ Two ways to run on Windows:
 
 If you see the preceding interface, it indicates that the operation is successful. Keep the window open.
 
-##### Access
+##### Windows - Access
 
-Access via browser at http://127.0.0.1:8080 or http://{Local Network IP}:8080
+Access via browser at http:\/\/127.0.0.1:8080 or http:\/\/{Local Network IP}:8080
 
-Access at http://{Server IP}:8080 after opening firewall and security group in cloud servers.
+Access at http:\/\/{Server IP}:8080 after opening firewall and security group in cloud servers.
 
 > [!WARNING]
 > If you open the file for the first time, nothing will be displayed. Please **wait until the first sav archive synchronization is complete**
@@ -334,7 +334,7 @@ jokerwho/palworld-server-tool:latest
 
 Most importantly, use `-v` to map the game's save file (Level.sav) directory to the container's `/game` directory.
 
-##### Persistence
+##### Monolithic Deployment - Persistence
 
 If you need to persist the `pst.db` file:
 
@@ -345,27 +345,27 @@ touch pst.db
 
 Then add `-v ./pst.db:/app/pst.db` in `docker run -v`.
 
-##### Environment Variables
+##### Monolithic Deployment - Environment Variables
 
-Set various environment variables, similar to those in [`config.yaml`](#configuration). The table below lists them:
+Set various environment variables, similar to those in [`config.yaml`]. The table below lists them:
 
 > [!WARNING]
 > Pay attention to the distinction between single and multiple underscores. It's best to copy the variable names from the table below for modifications!
 
-|        Variable Name         |   Default Value   |  Type  |                                       Description                                       |
-| :--------------------------: | :---------------: | :----: | :-------------------------------------------------------------------------------------: |
-|       WEB\_\_PASSWORD        |        ""         |  Text  |                          Password for Web interface admin mode                          |
-|         WEB\_\_PORT          |       8080        | Number |    **Changing the container mapping port is recommended instead of modifying this**     |
-|                              |                   |        |                                                                                         |
-|       RCON\_\_ADDRESS        | "127.0.0.1:25575" |  Text  |            RCON service address, can use container network 172.17.0.1:25575             |
-|       RCON\_\_PASSWORD       |        ""         |  Text  |                     AdminPassword in the server configuration file                      |
-|       RCON\_\_TIMEOUT        |         5         | Number |                      Timeout for individual RCON service requests                       |
-|    RCON\_\_SYNC_INTERVAL     |        60         | Number |             Interval for requesting RCON server to sync player online data              |
-|                              |                   |        |                                                                                         |
-|         SAVE\_\_PATH         |        ""         |  Text  |           Game save path **be sure to fill in the path inside the container**           |
-|     SAVE\_\_DECODE_PATH      |  "/app/sav_cli"   |  Text  | ⚠️ Built into the container, do not modify, or it will cause save analysis tool errors  |
-|    SAVE\_\_SYNC_INTERVAL     |        600        | Number |                          Interval for syncing player save data                          |
-| MANAGE\_\_KICK_NON_WHITELIST |       false       |  布尔  | Automatically kicked out when it detects that a player is not whitelisted but is online |
+|        Variable Name         |   Default Value   |  Type   |                                       Description                                       |
+| :--------------------------: | :---------------: | :-----: | :-------------------------------------------------------------------------------------: |
+|       WEB\_\_PASSWORD        |        ""         |  Text   |                          Password for Web interface admin mode                          |
+|         WEB\_\_PORT          |       8080        | Number  |    **Changing the container mapping port is recommended instead of modifying this**     |
+|                              |                   |         |                                                                                         |
+|       RCON\_\_ADDRESS        | "127.0.0.1:25575" |  Text   |            RCON service address, can use container network 172.17.0.1:25575             |
+|       RCON\_\_PASSWORD       |        ""         |  Text   |                     AdminPassword in the server configuration file                      |
+|       RCON\_\_TIMEOUT        |         5         | Number  |                      Timeout for individual RCON service requests                       |
+|    RCON\_\_SYNC_INTERVAL     |        60         | Number  |             Interval for requesting RCON server to sync player online data              |
+|                              |                   |         |                                                                                         |
+|         SAVE\_\_PATH         |        ""         |  Text   |           Game save path **be sure to fill in the path inside the container**           |
+|     SAVE\_\_DECODE_PATH      |  "/app/sav_cli"   |  Text   | ⚠️ Built into the container, do not modify, or it will cause save analysis tool errors  |
+|    SAVE\_\_SYNC_INTERVAL     |        600        | Number  |                          Interval for syncing player save data                          |
+| MANAGE\_\_KICK_NON_WHITELIST |       false       | Boolean | Automatically kicked out when it detects that a player is not whitelisted but is online |
 
 #### Agent Deployment
 
@@ -406,7 +406,7 @@ docker run -d --name pst \
 jokerwho/palworld-server-tool:latest
 ```
 
-##### Persistence
+##### Agent Deployment - Persistence
 
 If you need to persist the `pst.db` file:
 
@@ -417,25 +417,25 @@ touch pst.db
 
 Then add `-v ./pst.db:/app/pst.db` in `docker run -v`.
 
-##### Environment Variables
+##### Agent Deployment - Environment Variables
 
 > [!WARNING]
 > Pay attention to the distinction between single and multiple underscores. It's best to copy the variable names from the table below for modifications!
 
-|        Variable Name         |   Default Value   |  Type  |                                       Description                                       |
-| :--------------------------: | :---------------: | :----: | :-------------------------------------------------------------------------------------: |
-|       WEB\_\_PASSWORD        |        ""         |  Text  |                          Password for Web interface admin mode                          |
-|         WEB\_\_PORT          |       8080        | Number |   **It's recommended to change the container mapping port instead of modifying this**   |
-|                              |                   |        |                                                                                         |
-|       RCON\_\_ADDRESS        | "127.0.0.1:25575" |  Text  |                  RCON service address, typically Game server IP:25575                   |
-|       RCON\_\_PASSWORD       |        ""         |  Text  |                     AdminPassword in the server configuration file                      |
-|       RCON\_\_TIMEOUT        |         5         | Number |                      Timeout for individual RCON service requests                       |
-|    RCON\_\_SYNC_INTERVAL     |        60         | Number |             Interval for requesting RCON server to sync player online data              |
-|                              |                   |        |                                                                                         |
-|         SAVE\_\_PATH         |        ""         |  Text  |   pst-agent service address, format as<br> http://{Game server IP}:{Agent port}/sync    |
-|     SAVE\_\_DECODE_PATH      |  "/app/sav_cli"   |  Text  | ⚠️ Built into the container, do not modify, or it will cause save analysis tool errors  |
-|    SAVE\_\_SYNC_INTERVAL     |        600        | Number |                          Interval for syncing player save data                          |
-| MANAGE\_\_KICK_NON_WHITELIST |       false       |  布尔  | Automatically kicked out when it detects that a player is not whitelisted but is online |
+|        Variable Name         |   Default Value   |  Type   |                                       Description                                       |
+| :--------------------------: | :---------------: | :-----: | :-------------------------------------------------------------------------------------: |
+|       WEB\_\_PASSWORD        |        ""         |  Text   |                          Password for Web interface admin mode                          |
+|         WEB\_\_PORT          |       8080        | Number  |   **It's recommended to change the container mapping port instead of modifying this**   |
+|                              |                   |         |                                                                                         |
+|       RCON\_\_ADDRESS        | "127.0.0.1:25575" |  Text   |                  RCON service address, typically Game server IP:25575                   |
+|       RCON\_\_PASSWORD       |        ""         |  Text   |                     AdminPassword in the server configuration file                      |
+|       RCON\_\_TIMEOUT        |         5         | Number  |                      Timeout for individual RCON service requests                       |
+|    RCON\_\_SYNC_INTERVAL     |        60         | Number  |             Interval for requesting RCON server to sync player online data              |
+|                              |                   |         |                                                                                         |
+|         SAVE\_\_PATH         |        ""         |  Text   |   pst-agent service address, format as<br> http://{Game server IP}:{Agent port}/sync    |
+|     SAVE\_\_DECODE_PATH      |  "/app/sav_cli"   |  Text   | ⚠️ Built into the container, do not modify, or it will cause save analysis tool errors  |
+|    SAVE\_\_SYNC_INTERVAL     |        600        | Number  |                          Interval for syncing player save data                          |
+| MANAGE\_\_KICK_NON_WHITELIST |       false       | Boolean | Automatically kicked out when it detects that a player is not whitelisted but is online |
 
 #### Synchronizing Archives from k8s-pod
 
@@ -492,28 +492,30 @@ If the pst application is deployed as a Docker single container, then you need t
 
 1. Mount the daemon
 
-In the original `docker run` command, add the line `-v /var/run/docker.sock:/var/run/docker.sock`.
+   In the original `docker run` command, add the line `-v /var/run/docker.sock:/var/run/docker.sock`.
 
 2. Modify the environment variable
 
-Change the `SAVE__PATH` environment variable as follows:
+   Change the `SAVE__PATH` environment variable as follows:
 
-```bash
-SAVE__PATH="docker://<container_name_or_id>:<game_save_directory>"
-```
+   ```bash
+   SAVE__PATH="docker://<container_name_or_id>:<game_save_directory>"
+   ```
 
-For example:
+   For example:
 
-```bash
-SAVE__PATH="docker://palworld-server:/palworld/Pal/Saved"
-#or
-SAVE__PATH="docker://04b0a9af4288:/palworld/Pal/Saved"
-```
+   ```bash
+   SAVE__PATH="docker://palworld-server:/palworld/Pal/Saved"
+   #or
+   SAVE__PATH="docker://04b0a9af4288:/palworld/Pal/Saved"
+   ```
 
 > [!WARNING]
 > If you see an error like `Error response from daemon: client version 1.44 is too new. Maximum supported API version is 1.43` after running, it is because the Docker API version used by your current docker engine is too low. In this case, please add another environment variable:
 >
 > -e DOCKER_API_VERSION="1.43" (your API version)
+
+<br>
 
 > Since the time and location (including HASH) of the Level.sav file created by the game server are uncertain at the first instance, you only need to point to the Saved directory level, and the program will automatically scan.
 
@@ -532,6 +534,6 @@ SAVE__PATH="docker://04b0a9af4288:/palworld/Pal/Saved"
 
 According to the [Apache2.0 LICENSE](LICENSE) authorization, any reprints please indicate in the README and document section! Any commercial behavior must be informed!
 
-```
+```git
 
 ```

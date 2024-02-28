@@ -27,13 +27,13 @@ const emits = defineEmits(["onSearch"]);
 
 const handelPlayerAction = async (type) => {
   if (!isLogin.value) {
-    message.error($t("message.requireauth"));
+    message.error($t("message.requireAuth"));
     showLoginModal.value = true;
     return;
   } else {
     dialog.warning({
-      title: type === "ban" ? t("message.bantitle") : t("message.kicktitle"),
-      content: type === "ban" ? t("message.banwarn") : t("message.kickwarn"),
+      title: type === "ban" ? t("message.banTitle") : t("message.kickTitle"),
+      content: type === "ban" ? t("message.banWarn") : t("message.kickWarn"),
       positiveText: t("button.confirm"),
       negativeText: t("button.cancel"),
       onPositiveClick: async () => {
@@ -42,18 +42,18 @@ const handelPlayerAction = async (type) => {
             playerUid: playerInfo.value.player_uid,
           });
           if (statusCode.value === 200) {
-            message.success(t("message.bansuccess"));
+            message.success(t("message.banSuccess"));
           } else {
-            message.error(t("message.banfail", { err: data.value?.error }));
+            message.error(t("message.banFail", { err: data.value?.error }));
           }
         } else if (type === "kick") {
           const { data, statusCode } = await new ApiService().kickPlayer({
             playerUid: playerInfo.value.player_uid,
           });
           if (statusCode.value === 200) {
-            message.success(t("message.kicksuccess"));
+            message.success(t("message.kickSuccess"));
           } else {
-            message.error(t("message.kickfail", { err: data.value?.error }));
+            message.error(t("message.kickFail", { err: data.value?.error }));
           }
         }
       },
@@ -87,9 +87,9 @@ const copyText = (text) => {
 
   try {
     const successful = document.execCommand("copy");
-    message.success(t("message.copysuccess"));
+    message.success(t("message.copySuccess"));
   } catch (err) {
-    message.error(t("message.copyerr", { err: err }));
+    message.error(t("message.copyErr", { err: err }));
   }
 
   document.body.removeChild(textarea);

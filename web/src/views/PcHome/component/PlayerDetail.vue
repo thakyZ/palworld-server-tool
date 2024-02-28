@@ -32,6 +32,7 @@ const isDarkMode = ref(
 const skillTypeList = ref([]);
 
 // 帕鲁列表
+// Pal list
 const currentPalsList = ref([]);
 const createPlayerPalsColumns = () => {
   return [
@@ -161,6 +162,7 @@ watch(
 );
 
 // 游戏用户的帕鲁列表分页，搜索
+// Player's Pal list paging, search
 const paginationReactive = reactive({
   page: 1,
   pageSize: 10,
@@ -206,6 +208,7 @@ const clearSearch = () => {
 };
 
 // 帕鲁详情
+// Pal details
 const showPalDetailModal = ref(false);
 const palDetail = ref({});
 
@@ -215,29 +218,42 @@ const showPalDetail = (pal) => {
 };
 
 // UID、Steam64 复制
+// UID, STEAM64 copy
 const copyText = (text) => {
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  document.body.appendChild(textarea);
-  textarea.select();
+  (async function() {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
 
-  try {
-    const successful = document.execCommand("copy");
-    message.success(t("message.copysuccess"));
-  } catch (err) {
-    message.error(t("message.copyerr", { err: err }));
-  }
+    try {
+      const successful = document.execCommand("copy");
+      message.success(t("message.copySuccess"));
+    } catch {
+      try {
+        let permissionsResult = await navigator.permissions.query({ name: "write-on-clipboard" })
 
-  document.body.removeChild(textarea);
+        if (permissionsResult.state == "granted" || permissionsResult.state == "prompt") {
+          await navigator.clipboard.writeText(text);
+        }
+      } catch {
+        message.error(t("message.copyErr", { err: err }));
+      }
+    }
+
+    document.body.removeChild(textarea);
+  })();
 };
 
 // 查看公会
+// View guild
 const toGuilds = async (uid) => {
   playerToGuildStore().setCurrentUid(uid);
   playerToGuildStore().setUpdateStatus("guilds");
 };
 
 // 加入白名单
+// Add a player to the whitelist.
 const showAddWhiteListModal = ref(false);
 const addWhiteData = ref({
   name: "",
@@ -249,11 +265,11 @@ const addWhiteList = async () => {
     addWhiteData
   );
   if (statusCode.value === 200) {
-    message.success(t("message.addwhitesuccess"));
+    message.success(t("message.addWhiteSuccess"));
     showAddWhiteListModal.value = false;
     await getWhiteList();
   } else {
-    message.error(t("message.addwhitefail", { err: data.value?.error }));
+    message.error(t("message.addWhiteFail", { err: data.value?.error }));
   }
 };
 const handleAddWhiteList = () => {
@@ -263,33 +279,35 @@ const handleAddWhiteList = () => {
     addWhiteData.value.steam_id = playerInfo.value.steam_id;
     showAddWhiteListModal.value = true;
   } else {
-    message.error(t("message.requireauth"));
+    message.error(t("message.requireAuth"));
     showAddWhiteListModal.value = true;
   }
 };
 // 移除白名单
+// Remove entry from the whitelist.
 const removeWhitelist = async (player) => {
   if (isWhite(player)) {
     const { data, statusCode } = await new ApiService().removeWhitelist(player);
     if (statusCode.value === 200) {
-      message.success(t("message.removewhitesuccess"));
+      message.success(t("message.removeWhiteSuccess"));
       await getWhiteList();
     } else {
-      message.error(t("message.removewhitefail", { err: data.value?.error }));
+      message.error(t("message.removeWhiteFail", { err: data.value?.error }));
     }
   }
 };
 
 // 封禁、踢出
+// Ban or kick a player
 const handelPlayerAction = async (type) => {
   if (!isLogin.value) {
-    message.error($t("message.requireauth"));
+    message.error($t("message.requireAuth"));
     showLoginModal.value = true;
     return;
   }
   dialog.warning({
-    title: type === "ban" ? t("message.bantitle") : t("message.kicktitle"),
-    content: type === "ban" ? t("message.banwarn") : t("message.kickwarn"),
+    title: type === "ban" ? t("message.banTitle") : t("message.kickTitle"),
+    content: type === "ban" ? t("message.banWarn") : t("message.kickWarn"),
     positiveText: t("button.confirm"),
     negativeText: t("button.cancel"),
     onPositiveClick: async () => {
@@ -298,18 +316,18 @@ const handelPlayerAction = async (type) => {
           playerUid: playerInfo?.value.player_uid,
         });
         if (statusCode.value === 200) {
-          message.success(t("message.bansuccess"));
+          message.success(t("message.banSuccess"));
         } else {
-          message.error(t("message.banfail", { err: data.value?.error }));
+          message.error(t("message.banFail", { err: data.value?.error }));
         }
       } else if (type === "kick") {
         const { data, statusCode } = await new ApiService().kickPlayer({
           playerUid: playerInfo?.value.player_uid,
         });
         if (statusCode.value === 200) {
-          message.success(t("message.kicksuccess"));
+          message.success(t("message.kickSuccess"));
         } else {
-          message.error(t("message.kickfail", { err: data.value?.error }));
+          message.error(t("message.kickFail", { err: data.value?.error }));
         }
       }
     },
@@ -317,6 +335,7 @@ const handelPlayerAction = async (type) => {
 };
 
 // 获取白名单列表
+// Get a list of white list
 const whiteList = computed(() => whitelistStore().getWhitelist());
 const getWhiteList = async () => {
   if (isLogin.value) {
@@ -332,6 +351,7 @@ const getWhiteList = async () => {
 };
 
 // 是否在白名单中
+// Whether it is on the white list
 const isWhite = (player) => {
   if (whiteList.value.length === 0) {
     return false;
@@ -351,6 +371,7 @@ onMounted(async () => {
 });
 
 // 其他操作
+// Other operations
 const getDarkModeColor = () => {
   return isDarkMode.value ? "#fff" : "#000";
 };
@@ -550,6 +571,7 @@ const percentageHP = (hp, max_hp) => {
       />
     </n-card>
     <!-- 加入白名单，封禁，踢出 -->
+    <!-- Add a whitelist, ban the ban, kick out -->
     <n-flex
       justify="end"
       class="absolute bottom-3 right-4"
@@ -611,6 +633,7 @@ const percentageHP = (hp, max_hp) => {
     </n-flex>
   </div>
   <!-- 帕鲁详情 modal -->
+  <!-- Pal details modal -->
   <n-modal
     v-model:show="showPalDetailModal"
     preset="card"
@@ -640,6 +663,7 @@ const percentageHP = (hp, max_hp) => {
   </n-modal>
 
   <!-- 添加白名单 modal -->
+  <!-- Add a player whitelist modal -->
   <n-modal
     v-model:show="showAddWhiteListModal"
     class="custom-card"

@@ -1,3 +1,4 @@
+<!-- cSpell:ignore sider, hoverable -->
 <script setup>
 import { GroupWorkRound, PersonSearchSharp } from "@vicons/material";
 import { CrownFilled } from "@vicons/antd";
@@ -16,12 +17,14 @@ const guildList = ref([]);
 const guildInfo = ref({});
 
 // 获取公会列表
+// Get the guild list
 const getGuildList = async () => {
   const { data } = await new ApiService().getGuildList();
   guildList.value = data.value;
 };
 
 // 获取公会详情信息
+// Get the guild details
 const getGuildInfo = async (admin_player_uid) => {
   const { data } = await new ApiService().getGuild({
     adminPlayerUid: admin_player_uid,
@@ -36,6 +39,7 @@ const clickGetGuildInfo = async (id) => {
 };
 
 // 白名单
+// whitelist
 const whiteList = computed(() => whitelistStore().getWhitelist());
 const isWhite = computed(() => (player) => {
   if (player) {
@@ -52,6 +56,7 @@ const isWhite = computed(() => (player) => {
 });
 
 // 查看玩家
+// View player
 const ToPlayers = async (uid) => {
   playerToGuildStore().setCurrentUid(uid);
   playerToGuildStore().setUpdateStatus("players");
@@ -73,6 +78,7 @@ onMounted(async () => {
 });
 
 // 其他操作
+// Other operations
 const getUserAvatar = () => {
   return new URL("@/assets/avatar.webp", import.meta.url).href;
 };
@@ -115,7 +121,7 @@ const getUserAvatar = () => {
           v-if="loadingGuild"
           class="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-#ffffff40"
         >
-          <template #description> 加载中... </template>
+          <template #description> {{ $t("message.loading") }} </template>
         </n-spin>
       </n-layout-sider>
       <n-layout class="relative" :native-scrollbar="false">
@@ -198,7 +204,7 @@ const getUserAvatar = () => {
           v-if="loadingGuildDetail"
           class="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-#ffffff40"
         >
-          <template #description> 加载中... </template>
+          <template #description> {{ $t("message.loading") }} </template>
         </n-spin>
       </n-layout>
     </n-layout>

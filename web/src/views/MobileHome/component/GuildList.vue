@@ -1,3 +1,4 @@
+<!-- cSpell:words hoverable -->
 <script setup>
 import { GroupWorkRound } from "@vicons/material";
 import { computed } from "vue";

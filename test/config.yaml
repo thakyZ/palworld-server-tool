@@ -1,4 +1,4 @@
-# WebUI Config相关配置
+# WebUI Config 相关配置
 web:
   # WebUI Admin Password 管理模式密码
   password: ""

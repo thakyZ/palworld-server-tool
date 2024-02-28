@@ -8,7 +8,7 @@
 
 This refers to the scenario where your game server is a Linux version, and you want to deploy the pst main body elsewhere. For the deployment of the pst main body, refer to the previous [Installation and Deployment](./README.md#installation-and-deployment). The impact of pst-agent is only on the modification of the configuration file.
 
-#### Download
+#### Linux - Download
 
 Download the pst-agent tool, rename it, and ensure it's executable
 
@@ -18,7 +18,7 @@ mv pst-agent_v0.5.6_linux_x86_64 pst-agent
 chmod +x pst-agent
 ```
 
-#### Run
+#### Linux - Running
 
 ```bash
 # ./pst-agent --port 8081 -f {Absolute path of the Level.sav save file}
@@ -35,11 +35,11 @@ nohup ./pst-agent --port 8081 -f ...{manually omitted}.../Level.sav > agent.log 
 tail -f agent.log
 ```
 
-#### Open Firewall/Security Group
+#### Linux - Open Firewall/Security Group
 
 If pst-agent and pst main body are not in the same network group, you need to open the corresponding public network port of the game server (such as 8081, or other custom ports)
 
-#### Configuration
+#### Linux - Configuration
 
 Find the `config.yaml` file of **the pst main body (note, not the pst-agent!!!)** and modify it.
 
@@ -63,11 +63,11 @@ kill $(ps aux | grep 'pst-agent' | awk '{print $2}') | head -n 1
 
 ### Windows
 
-#### Download
+#### Windows - Download
 
 Download the pst-agent tool and rename it, e.g., rename `pst-agent_v0.5.6_windows_x86_64.exe` to `pst-agent.exe`
 
-#### Run
+#### Windows - Running
 
 Press `Win + R`, type `powershell` to open Powershell, use the `cd` command to navigate to the directory of the downloaded executable
 
@@ -76,11 +76,11 @@ Press `Win + R`, type `powershell` to open Powershell, use the `cd` command to n
 .\pst-agent.exe --port 8081 -f C:\Users\ZaiGie\...\Level.sav
 ```
 
-![](./docs/img/windows_agent.png)
+![Screenshot of the Palworld Server Tool Agent](./docs/img/windows_agent.png)
 
 After successful operation, please keep the window open
 
-#### Configuration
+#### Windows - Configuration
 
 Find the `config.yaml` file of **the pst main body (note, not the pst-agent!!!)** and modify it.
 

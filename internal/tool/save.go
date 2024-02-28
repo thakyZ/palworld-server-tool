@@ -14,7 +14,7 @@ import (
 	"github.com/zaigie/palworld-server-tool/internal/source"
 )
 
-type Sturcture struct {
+type Structure struct {
 	Players []database.Player `json:"players"`
 	Guilds  []database.Guild  `json:"guilds"`
 }

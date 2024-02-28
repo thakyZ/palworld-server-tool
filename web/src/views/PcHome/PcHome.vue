@@ -1,3 +1,4 @@
+<!-- cSpell:ignore TwoTone -->
 <script setup>
 import {
   AdminPanelSettingsOutlined,
@@ -70,7 +71,7 @@ const getUserAvatar = () => {
 };
 
 const handleSelectLanguage = (key) => {
-  message.info(t("message.changelanguage"));
+  message.info(t("message.changeLanguage"));
   if (key === "zh") {
     localStorage.setItem("locale", "zh");
     // locale.value = "zh";
@@ -125,16 +126,16 @@ const handleLogin = async () => {
     password: password.value,
   });
   if (statusCode.value === 401) {
-    message.error(t("message.autherr"));
+    message.error(t("message.authErr"));
     password.value = "";
     return;
   }
   let token = data.value.token;
   localStorage.setItem(PALWORLD_TOKEN, token);
   userStore().setIsLogin(true, token);
-  await getWhiteList();
+  await getWhitelist();
   authToken.value = token;
-  message.success(t("message.authsuccess"));
+  message.success(t("message.authSuccess"));
   showLoginModal.value = false;
   isLogin.value = true;
 };
@@ -146,7 +147,7 @@ const handleRconDrawer = () => {
     showRconDrawer.value = true;
     getRconCommands();
   } else {
-    message.error(t("message.requireauth"));
+    message.error(t("message.requireAuth"));
     showRconDrawer.value = true;
   }
 };
@@ -171,7 +172,7 @@ const sendRconCommand = async (uuid) => {
     if (statusCode.value === 200) {
       message.info(data.value?.message);
     } else {
-      message.error(t("message.rconfail", { err: data.value?.error }));
+      message.error(t("message.rconFail", { err: data.value?.error }));
     }
   }
 };
@@ -204,12 +205,12 @@ const addRconCommand = async () => {
       remark: newRconRemark.value,
     });
     if (statusCode.value === 200) {
-      message.success(t("message.addrconsuccess"));
+      message.success(t("message.addRconSuccess"));
       await getRconCommands();
       newRconCommand.value = "";
       newRconRemark.value = "";
     } else {
-      message.error(t("message.addrconfail", { err: data.value?.error }));
+      message.error(t("message.addRconFail", { err: data.value?.error }));
     }
   }
 };
@@ -217,27 +218,28 @@ const removeRconCommand = async (uuid) => {
   if (checkAuthToken()) {
     const { data, statusCode } = await new ApiService().removeRconCommand(uuid);
     if (statusCode.value === 200) {
-      message.success(t("message.removerconsuccess"));
+      message.success(t("message.removeRconSuccess"));
       await getRconCommands();
     } else {
-      message.error(t("message.removerconfail", { err: data.value?.error }));
+      message.error(t("message.removeRconFail", { err: data.value?.error }));
     }
   }
 };
 
 // 白名单
+// whitelist
 const showWhiteListModal = ref(false);
 const whiteList = ref([]);
 const handleWhiteList = () => {
   if (checkAuthToken()) {
     showWhiteListModal.value = true;
-    getWhiteList();
+    getWhitelist();
   } else {
-    message.error(t("message.requireauth"));
+    message.error(t("message.requireAuth"));
     showWhiteListModal.value = true;
   }
 };
-const getWhiteList = async () => {
+const getWhitelist = async () => {
   if (checkAuthToken()) {
     const { data, statusCode } = await new ApiService().getWhitelist();
     if (statusCode.value === 200) {
@@ -257,16 +259,18 @@ const getWhiteList = async () => {
   }
 };
 // 查看白名单中的该玩家
+// View the player in the whitelist
 const showWhitelistPlayer = ref(null);
 const showCurrentPlayer = (id) => {
   showWhitelistPlayer.value = id;
   showWhiteListModal.value = false;
 };
 // 从白名单中移除该玩家
+// Remove the player from the whitelist
 const removeWhiteList = async (player) => {
   if (!player.player_uid && !player.steam_id) {
     message.error(
-      t("message.removewhitefail", {
+      t("message.removeShiteFail", {
         err: "player_uid or steam_id is required",
       })
     );
@@ -280,14 +284,15 @@ const removeWhiteList = async (player) => {
   } else {
     const { data, statusCode } = await new ApiService().removeWhitelist(player);
     if (statusCode.value === 200) {
-      message.success(t("message.removewhitesuccess"));
-      await getWhiteList();
+      message.success(t("message.removeWhiteSuccess"));
+      await getWhitelist();
     } else {
-      message.error(t("message.removewhitefail", { err: data.value?.error }));
+      message.error(t("message.removeWhiteFail", { err: data.value?.error }));
     }
   }
 };
 // 添加一项到白名单中
+// Add one to the whitelist
 const virtualListInst = ref();
 const handleAddNewWhiteList = () => {
   whiteList.value.unshift({
@@ -299,6 +304,7 @@ const handleAddNewWhiteList = () => {
   virtualListInst.value?.scrollTo({ index: 0 });
 };
 // 保存修改白名单
+// Save and modify the whitelist
 const putWhiteList = async () => {
   if (whiteList.value.length === 0) {
     return;
@@ -308,27 +314,30 @@ const putWhiteList = async () => {
     whiteListData
   );
   if (statusCode.value === 200) {
-    message.success(t("message.addwhitesuccess"));
-    getWhiteList();
+    message.success(t("message.addWhiteSuccess"));
+    getWhitelist();
     showWhiteListModal.value = false;
   } else {
-    message.error(t("message.addwhitefail", { err: data.value?.error }));
+    message.error(t("message.addWhiteFail", { err: data.value?.error }));
   }
 };
 // 接受玩家加入到黑名单信息
-const getSonWhitelistStatus = () => {
-  getWhiteList();
+// Add to blacklist (?) [This method does not add to blacklist]
+const getBlacklistStatus = () => {
+  getWhitelist();
 };
 
 // 广播
+// broadcast
 const showBroadcastModal = ref(false);
 const broadcastText = ref("");
-const handleStartBrodcast = () => {
+const handleStartBroadcast = () => {
   // 开始广播
+  // Start broadcast
   if (checkAuthToken()) {
     showBroadcastModal.value = true;
   } else {
-    message.error(t("message.requireauth"));
+    message.error(t("message.requireAuth"));
     showLoginModal.value = true;
   }
 };
@@ -337,15 +346,15 @@ const handleBroadcast = async () => {
     message: broadcastText.value,
   });
   if (statusCode.value === 200) {
-    message.success(t("message.broadcastsuccess"));
+    message.success(t("message.broadcastSuccess"));
     showBroadcastModal.value = false;
     broadcastText.value = "";
   } else {
     if (data.value?.error.includes("contain non-ascii")) {
-      message.error(t("message.broadcastasciierr"));
+      message.error(t("message.broadcastAsciiErr"));
       return;
     }
-    message.error(t("message.broadcastfail", { err: data.value?.error }));
+    message.error(t("message.broadcastFail", { err: data.value?.error }));
   }
 };
 
@@ -357,26 +366,27 @@ const doShutdown = async () => {
 };
 
 // 关机
+// Shutdown
 const handleShutdown = () => {
   if (checkAuthToken()) {
     dialog.warning({
       title: t("message.warn"),
-      content: t("message.shutdowntip"),
+      content: t("message.shutdownTip"),
       positiveText: t("button.confirm"),
       negativeText: t("button.cancel"),
       onPositiveClick: async () => {
         const { data, statusCode } = await doShutdown();
         if (statusCode.value === 200) {
-          message.success(t("message.shutdownsuccess"));
+          message.success(t("message.shutdownSuccess"));
           return;
         } else {
-          message.error(t("message.shutdownfail", { err: data.value?.error }));
+          message.error(t("message.shutdownFail", { err: data.value?.error }));
         }
       },
       onNegativeClick: () => {},
     });
   } else {
-    message.error(t("message.requireauth"));
+    message.error(t("message.requireAuth"));
     showLoginModal.value = true;
   }
 };
@@ -412,6 +422,7 @@ watch(
 
 /**
  * 检测 token
+ * Test token
  */
 const checkAuthToken = () => {
   const token = localStorage.getItem(PALWORLD_TOKEN);
@@ -459,7 +470,7 @@ onMounted(async () => {
   checkAuthToken();
   getServerInfo();
   getPlayerList();
-  await getWhiteList();
+  await getWhitelist();
   loading.value = false;
 });
 </script>
@@ -479,7 +490,7 @@ onMounted(async () => {
         <n-tag type="default" :size="smallScreen ? 'medium' : 'large'">{{
           serverInfo?.name
             ? `${serverInfo.name + " " + serverInfo.version}`
-            : "获取中..."
+            : $t("message.loading")
         }}</n-tag>
       </n-space>
 
@@ -599,7 +610,7 @@ onMounted(async () => {
                 secondary
                 strong
                 round
-                @click="handleStartBrodcast"
+                @click="handleStartBroadcast"
               >
                 <template #icon>
                   <n-icon>
@@ -629,7 +640,7 @@ onMounted(async () => {
             <player-list
               v-if="currentDisplay === 'players'"
               :showWhitelistPlayer="showWhitelistPlayer"
-              @onWhitelistStatus="getSonWhitelistStatus"
+              @onWhitelistStatus="getBlacklistStatus"
             ></player-list>
             <guild-list v-if="currentDisplay === 'guilds'"></guild-list>
           </div>
@@ -652,7 +663,7 @@ onMounted(async () => {
     :segmented="segmented"
   >
     <div>
-      <span class="block pb-2">{{ $t("message.authdesc") }}</span>
+      <span class="block pb-2">{{ $t("message.authDesc") }}</span>
       <n-input
         type="password"
         show-password-on="click"
@@ -856,7 +867,7 @@ onMounted(async () => {
     :segmented="segmented"
   >
     <div>
-      <n-empty description="什么都没有" v-if="whiteList.length == 0"> </n-empty>
+      <n-empty :description="$t('message.nothing')" v-if="whiteList.length == 0"> </n-empty>
       <n-virtual-list
         v-else
         ref="virtualListInst"

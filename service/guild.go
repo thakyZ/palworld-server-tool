@@ -48,6 +48,7 @@ func GetGuild(db *bbolt.DB, playerUID string) (database.Guild, error) {
 		b := tx.Bucket([]byte("guilds"))
 
 		// 遍历bucket中的所有guild
+		// Iterate over all guilds in the bucket
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			var g database.Guild
@@ -56,6 +57,7 @@ func GetGuild(db *bbolt.DB, playerUID string) (database.Guild, error) {
 			}
 
 			// 检查当前guild的players是否包含指定的player_uid
+			// Checks if the current guild's players contain the specified player_uid
 			for _, player := range g.Players {
 				if player.PlayerUid == playerUID {
 					guild = g

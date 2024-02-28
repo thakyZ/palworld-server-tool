@@ -3,7 +3,6 @@
 """Python Installer Build Script"""
 
 # pyright: reportAttributeAccessIssue=false
-# cSpell:ignore --onefile
 
 import platform
 from pathlib import Path

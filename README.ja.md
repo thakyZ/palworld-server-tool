@@ -47,20 +47,20 @@
 
 ## 機能スクリーンショット
 
-https://github.com/zaigie/palworld-server-tool/assets/17232619/7a861091-94ee-4efe-8274-15df261d50b4
+[https://github.com/zaigie/palworld-server-tool/assets/17232619/7a861091-94ee-4efe-8274-15df261d50b4](https://github.com/zaigie/palworld-server-tool/assets/17232619/7a861091-94ee-4efe-8274-15df261d50b4)
 
 ### デスクトップ
 
-|                              |                              |
-| :--------------------------: | :--------------------------: |
-| ![](./docs/img/pst-en-2.png) | ![](./docs/img/pst-en-4.png) |
+|                                                                   |                                                                   |
+| :---------------------------------------------------------------: | :---------------------------------------------------------------: |
+| ![Palworldサーバーツールのスクリーンショット](./docs/img/pst-en-2.png) | ![Palworldサーバーツールのスクリーンショット](./docs/img/pst-en-4.png) |
 
-![](./docs/img/pst-en-3.png)
+![Palworldサーバーツールのスクリーンショット](./docs/img/pst-en-3.png)
 
 ### モバイル
 
 <p align="center">
-<img src="./docs/img/pst-en-m-1.png" width="30%" /><img src="./docs/img/pst-en-m-2.png" width="30%" /><img src="./docs/img/pst-en-m-3.png" width="30%" />
+  <img src="./docs/img/pst-en-m-1.png" width="30%" alt="Palworldサーバーツールのスクリーンショット" /><img src="./docs/img/pst-en-m-2.png" width="30%" alt="Palworldサーバーツールのスクリーンショット" /><img src="./docs/img/pst-en-m-3.png" width="30%" alt="Palworldサーバーツールのスクリーンショット" />
 </p>
 
 ## プライベートサーバー RCON の有効化方法
@@ -113,14 +113,14 @@ AdminPassword=...,...,RCONEnabled=true,RCONPort=25575
 
 #### Linux
 
-##### ダウンロードと解凍
+##### Linux - ダウンロードと解凍
 
 ```bash
 # pst_{version}_{platform}_{arch}.tar.gz ファイルをダウンロードしてpstディレクトリに解凍します
 mkdir -p pst && tar -xzf pst_v0.5.7_linux_x86_64.tar.gz -C pst
 ```
 
-##### 設定
+##### Linux - 設定
 
 1. ディレクトリを開いて実行可能にします
 
@@ -175,7 +175,7 @@ mkdir -p pst && tar -xzf pst_v0.5.7_linux_x86_64.tar.gz -C pst
      kick_non_whitelist: false
    ```
 
-##### 実行
+##### Linux - 実行
 
 ```bash
 ./pst
@@ -197,30 +197,32 @@ nohup ./pst > server.log 2>&1 &
 tail -f server.log
 ```
 
-##### バックグラウンド実行を停止する
+##### Linux - バックグラウンド実行を停止する
 
 ```bash
 kill $(ps aux | grep 'pst' | awk '{print $2}') | head -n 1
 ```
 
-##### アクセス
+##### Linux - アクセス
 
-ブラウザを通じて http://127.0.0.1:8080 または http://{ローカルネットワーク IP}:8080 にアクセスしてください。
+ブラウザを通じて http:\/\/127.0.0.1:8080 または http:\/\/{ローカルネットワーク IP}:8080 にアクセスしてください。
 
-クラウドサーバーのファイアウォールとセキュリティグループを開放した後、http://{サーバー IP}:8080 にアクセスすることもできます。
+クラウドサーバーのファイアウォールとセキュリティグループを開放した後、http:\/\/{サーバー IP}:8080 にアクセスすることもできます。
 
 > [!WARNING]
 > 最初に開いたときには内容が表示されずに空白になる場合があります。**最初の sav ファイル同期が完了するまでお待ちください**。
+
+<br>
 
 > サーバーの設定が十分で、パフォーマンスが良い場合は、`save.sync_interval`を短くしてみることができます。
 
 #### Windows
 
-##### ダウンロードと解凍
+##### Windows - ダウンロードと解凍
 
 `pst_v0.5.7_windows_x86_64.zip`を任意のディレクトリに解凍します（`pst`というディレクトリ名を推奨）。
 
-##### 設定
+##### Windows - 設定
 
 解凍ディレクトリ内の`config.yaml`ファイルを見つけ、指示に従って変更します。
 
@@ -228,7 +230,7 @@ kill $(ps aux | grep 'pst' | awk '{print $2}') | head -n 1
 
 マウスの右クリックから「プロパティ」を選択し、パスとファイル名を確認してから、それらを結合してください。（存档ファイルのパスとツールのパスも同様）
 
-![](./docs/img/windows_path.png)
+![Windowsのファイルのプロパティダイアログのスクリーンショット](./docs/img/windows_path.png)
 
 > [!WARNING]
 > コピーしたパスを`config.yaml`に直接貼り付けるのではなく、すべての'\\'の前にもう一つ'\\'を追加する必要があります。以下に示すように
@@ -277,7 +279,7 @@ manage:
   kick_non_whitelist: false
 ```
 
-##### 実行
+##### Windows - 実行
 
 Windows で実行するには 2 つの
 
@@ -302,11 +304,11 @@ Windows で実行するには 2 つの
 
 上記の画面が表示されたら、正常に実行されています。ウィンドウを開いたままにしてください。
 
-##### アクセス
+##### Windows - アクセス
 
-ブラウザを通じて http://127.0.0.1:8080 または http://{ローカルネットワーク IP}:8080 にアクセスしてください。
+ブラウザを通じて http:\/\/127.0.0.1:8080 または http:\/\/{ローカルネットワーク IP}:8080 にアクセスしてください。
 
-クラウドサーバーのファイアウォールとセキュリティグループを開放した後、http://{サーバー IP}:8080 にアクセスすることもできます。
+クラウドサーバーのファイアウォールとセキュリティグループを開放した後、http:\/\/{サーバー IP}:8080 にアクセスすることもできます。
 
 > [!WARNING]
 > 最初に開いたときには内容が表示されずに空白になる場合があります。**最初の sav ファイル同期が完了するまでお待ちください**。
@@ -336,7 +338,7 @@ jokerwho/palworld-server-tool:latest
 
 最も重要なのは、ゲームの存档ファイル（Level.sav）があるディレクトリを-v オプションでコンテナ内の/game ディレクトリにマッピングすることです。
 
-##### 永続化
+##### 単体デプロイメント - 永続化
 
 `pst.db`ファイルを永続化する必要がある場合：
 
@@ -347,11 +349,11 @@ touch pst.db
 
 その後、`docker run -v`に`-v ./pst.db:/app/pst.db`を追加します。
 
-##### 環境変数
+##### 単体デプロイメント - 環境変数
 
 各環境変
 
-数を設定します。[`config.yaml`](#設定)と基本的に似ていますが、以下の表のようになります：
+数を設定します。`config.yaml`と基本的に似ていますが、以下の表のようになります：
 
 > [!WARNING]
 > 単一と複数のアンダースコアを区別してください。変更が必要な場合は、下表の変数名をコピーして使用してください！
@@ -412,7 +414,7 @@ docker run -d --name pst \
 jokerwho/palworld-server-tool:latest
 ```
 
-##### 永続化
+##### Agent デプロイメント - 永続化
 
 `pst.db`ファイルを永続化する必要がある場合：
 
@@ -423,7 +425,7 @@ touch pst.db
 
 その後、`docker run -v`に`-v ./pst.db:/app/pst.db`を追加します。
 
-##### 環境変数
+##### Agent デプロイメント - 環境変数
 
 > [!WARNING]
 > 単一と複数のアンダースコアを区別してください。変更が必要な場合は、下表の変数名をコピーして使用してください！
@@ -501,28 +503,30 @@ pst 本体が Docker 単体デプロイメントである場合、`SAVE__PATH`�
 
 1. デーモンをマウントする
 
-元の`docker run`コマンドに`-v /var/run/docker.sock:/var/run/docker.sock`を追加します
+   元の`docker run`コマンドに`-v /var/run/docker.sock:/var/run/docker.sock`を追加します
 
 2. 環境変数を変更する
 
 `SAVE__PATH`環境変数を以下の形式で変更します：
 
-```bash
-SAVE__PATH="docker://<container_name_or_id>:<ゲームの存档ディレクトリ>"
-```
+   ```bash
+   SAVE__PATH="docker://<container_name_or_id>:<ゲームの存档ディレクトリ>"
+   ```
 
-例えば：
+   例えば：
 
-```bash
-SAVE__PATH="docker://palworld-server:/palworld/Pal/Saved"
-# または
-SAVE__PATH="docker://04b0a9af4288:/palworld/Pal/Saved"
-```
+   ```bash
+   SAVE__PATH="docker://palworld-server:/palworld/Pal/Saved"
+   # または
+   SAVE__PATH="docker://04b0a9af4288:/palworld/Pal/Saved"
+   ```
 
 > [!WARNING]
-> 実行後に` Error response from daemon: client version 1.44 is too new. Maximum supported API version is 1.43`のようなエラーが表示された場合は、現在の docker engine が使用している Docker API のバージョンが低いことを意味します。その場合は、別の環境変数を追加してください：
+> 実行後に`Error response from daemon: client version 1.44 is too new. Maximum supported API version is 1.43`のようなエラーが表示された場合は、現在の docker engine が使用している Docker API のバージョンが低いことを意味します。その場合は、別の環境変数を追加してください：
 >
 > -e DOCKER_API_VERSION="1.43" (あなたの API バージョン)
+
+<br>
 
 > ゲームサーバーが Level.sav ファイルを作成する時間と位置（HASH を含む）は初回には不確定なため、Saved ディレクトリレベルを指定してください。プログラムが自動的にスキャンします
 

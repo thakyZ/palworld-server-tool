@@ -1,3 +1,4 @@
+<!-- cSpell:ignore has-sider -->
 <script setup>
 import {
   AdminPanelSettingsOutlined,
@@ -54,7 +55,7 @@ const updateDarkMode = (e) => {
 };
 
 const handleSelectLanguage = (key) => {
-  message.info(t("message.changelanguage"));
+  message.info(t("message.changeLanguage"));
   if (key === "zh") {
     localStorage.setItem("locale", "zh");
     // locale.value = "zh";
@@ -114,6 +115,7 @@ const getGuildInfo = async (admin_player_uid) => {
 };
 
 // 接受子组件
+// Accept sub - component
 const getChoosePlayer = (uid) => {
   getPlayerInfo(uid);
 };
@@ -122,6 +124,7 @@ const getChooseGuild = (uid) => {
 };
 
 // 游戏用户的帕鲁列表分页，搜索
+// Player's Pal list paging, search
 const clickSearch = (searchValue) => {
   const pattern = /^\s*$|(\s)\1/;
   if (searchValue && !pattern.test(searchValue)) {
@@ -153,6 +156,7 @@ const clickSearch = (searchValue) => {
   }
 };
 // 滚动加载更多
+// Roll more
 const palsLoading = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -194,7 +198,7 @@ const handleLogin = async () => {
     password: password.value,
   });
   if (statusCode.value === 401) {
-    message.error(t("message.autherr"));
+    message.error(t("message.authErr"));
     password.value = "";
     return;
   }
@@ -202,7 +206,7 @@ const handleLogin = async () => {
   localStorage.setItem(PALWORLD_TOKEN, token);
   userStore().setIsLogin(true, token);
   authToken.value = token;
-  message.success(t("message.authsuccess"));
+  message.success(t("message.authSuccess"));
   showLoginModal.value = false;
   isLogin.value = true;
 };
@@ -210,12 +214,12 @@ const handleLogin = async () => {
 // broadcast
 const showBroadcastModal = ref(false);
 const broadcastText = ref("");
-const handleStartBrodcast = () => {
+const handleStartBroadcast = () => {
   // broadcast start
   if (checkAuthToken()) {
     showBroadcastModal.value = true;
   } else {
-    message.error(t("message.requireauth"));
+    message.error(t("message.requireAuth"));
     showLoginModal.value = true;
   }
 };
@@ -224,15 +228,15 @@ const handleBroadcast = async () => {
     message: broadcastText.value,
   });
   if (statusCode.value === 200) {
-    message.success(t("message.broadcastsuccess"));
+    message.success(t("message.broadcastSuccess"));
     showBroadcastModal.value = false;
     broadcastText.value = "";
   } else {
     if (data.value?.error.includes("contain non-ascii")) {
-      message.error(t("message.broadcastasciierr"));
+      message.error(t("message.broadcastAsciiErr"));
       return;
     }
-    message.error(t("message.broadcastfail", { err: data.value?.error }));
+    message.error(t("message.broadcastFail", { err: data.value?.error }));
   }
 };
 
@@ -248,22 +252,22 @@ const handleShutdown = () => {
   if (checkAuthToken()) {
     dialog.warning({
       title: t("message.warn"),
-      content: t("message.shutdowntip"),
+      content: t("message.shutdownTip"),
       positiveText: t("button.confirm"),
       negativeText: t("button.cancel"),
       onPositiveClick: async () => {
         const { data, statusCode } = await doShutdown();
         if (statusCode.value === 200) {
-          message.success(t("message.shutdownsuccess"));
+          message.success(t("message.shutdownSuccess"));
           return;
         } else {
-          message.error(t("message.shutdownfail", { err: data.value?.error }));
+          message.error(t("message.shutdownFail", { err: data.value?.error }));
         }
       },
       onNegativeClick: () => {},
     });
   } else {
-    message.error(t("message.requireauth"));
+    message.error(t("message.requireAuth"));
     showLoginModal.value = true;
   }
 };
@@ -373,7 +377,7 @@ onMounted(async () => {
         <n-tag type="default" size="small">{{
           serverInfo?.name
             ? `${serverInfo.name + " " + serverInfo.version}`
-            : "获取中..."
+            : $t("message.loading")
         }}</n-tag>
       </div>
       <n-space vertical>
@@ -440,7 +444,7 @@ onMounted(async () => {
                 secondary
                 strong
                 round
-                @click="handleStartBrodcast"
+                @click="handleStartBroadcast"
               >
                 <template #icon>
                   <n-icon>
@@ -565,7 +569,7 @@ onMounted(async () => {
     :segmented="segmented"
   >
     <div>
-      <span class="block pb-2">{{ $t("message.authdesc") }}</span>
+      <span class="block pb-2">{{ $t("message.authDesc") }}</span>
       <n-input
         type="password"
         show-password-on="click"

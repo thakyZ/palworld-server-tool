@@ -63,5 +63,9 @@
   "python.analysis.typeCheckingMode": "standard",
   "python.analysis.diagnosticSeverityOverrides": {
     "reportArgumentType": false
+  },
+  "markdownlint.config": {
+    "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint/v0.33.0/schema/markdownlint-config-schema.json",
+    "MD033": false,
   }
 }

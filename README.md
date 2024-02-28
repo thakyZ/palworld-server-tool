@@ -1,5 +1,5 @@
 <h1 align='center'>幻兽帕鲁服务器管理工具</h1>
-
+<!-- cSpell:word Sealos -->
 <p align="center">
    <strong>简体中文</strong> | <a href="/README.en.md">English</a> | <a href="/README.ja.md">日本語</a>
 </p>
@@ -54,20 +54,20 @@
 
 ## 功能截图
 
-https://github.com/zaigie/palworld-server-tool/assets/17232619/7a861091-94ee-4efe-8274-15df261d50b4
+[https://github.com/zaigie/palworld-server-tool/assets/17232619/7a861091-94ee-4efe-8274-15df261d50b4](https://github.com/zaigie/palworld-server-tool/assets/17232619/7a861091-94ee-4efe-8274-15df261d50b4)
 
 ### 桌面端
 
-|                              |                              |
-| :--------------------------: | :--------------------------: |
-| ![](./docs/img/pst-zh-2.png) | ![](./docs/img/pst-zh-4.png) |
+|                                                   |                                                   |
+| :-----------------------------------------------: | :-----------------------------------------------: |
+| ![Palworld 服务器工具截图](./docs/img/pst-zh-2.png) | ![Palworld 服务器工具截图](./docs/img/pst-zh-4.png) |
 
-![](./docs/img/pst-zh-3.png)
+![Palworld 服务器工具截图](./docs/img/pst-zh-3.png)
 
 ### 移动端
 
 <p align="center">
-<img src="./docs/img/pst-zh-m-1.png" width="30%" /><img src="./docs/img/pst-zh-m-2.png" width="30%" /><img src="./docs/img/pst-zh-m-3.png" width="30%" />
+<img src="./docs/img/pst-zh-m-1.png" width="30%" alt="Palworld 服务器工具截图" /><img src="./docs/img/pst-zh-m-2.png" width="30%" alt="Palworld 服务器工具截图" /><img src="./docs/img/pst-zh-m-3.png" width="30%" alt="Palworld 服务器工具截图" />
 </p>
 
 ## 如何开启私服 RCON
@@ -91,15 +91,40 @@ AdminPassword=...,...,RCONEnabled=true,RCONPort=25575
 
 ## 安装部署
 
-- [Sealos 一键部署](#sealos-一键部署)
-- [文件部署](#文件部署)
-  - [Linux](#linux)
-  - [Windows](#windows)
-- [Docker 部署](#docker-部署)
-  - [单体部署](#单体部署)
-  - [Agent 部署](#agent-部署)
-  - [从 k8s-pod 同步存档](#从-k8s-pod-同步存档)
-- [从 docker 容器同步存档](#从-docker-容器同步存档)
+- [功能截图](#功能截图)
+  - [桌面端](#桌面端)
+  - [移动端](#移动端)
+- [如何开启私服 RCON](#如何开启私服-rcon)
+- [安装部署](#安装部署)
+  - [Sealos 一键部署](#sealos-一键部署)
+  - [文件部署](#文件部署)
+    - [Linux](#linux)
+      - [Linux - 下载解压](#linux---下载解压)
+      - [Linux - 配置](#linux---配置)
+      - [Linux - 运行](#linux---运行)
+      - [关闭后台运行](#关闭后台运行)
+      - [Linux - 访问](#linux---访问)
+    - [Windows](#windows)
+      - [Windows - 下载解压](#windows---下载解压)
+      - [Windows — 配置](#windows--配置)
+      - [Windows — 运行](#windows--运行)
+      - [Windows — 访问](#windows--访问)
+  - [Docker 部署](#docker-部署)
+    - [单体部署](#单体部署)
+      - [单体部署 - 持久化](#单体部署---持久化)
+      - [环境变量](#环境变量)
+    - [Agent 部署](#agent-部署)
+      - [先运行 agent 容器](#先运行-agent-容器)
+      - [再运行 pst 容器](#再运行-pst-容器)
+      - [Agent 部署 - 持久化](#agent-部署---持久化)
+      - [Agent 部署 - 环境变量](#agent-部署---环境变量)
+    - [从 k8s-pod 同步存档](#从-k8s-pod-同步存档)
+  - [从 docker 容器同步存档](#从-docker-容器同步存档)
+    - [文件部署使用](#文件部署使用)
+    - [Docker 部署使用](#docker-部署使用)
+- [接口文档](#接口文档)
+- [感谢](#感谢)
+- [许可证](#许可证)
 
 请确保前提 [开启私服 RCON](#如何开启私服-rcon)
 
@@ -115,15 +140,14 @@ AdminPassword=...,...,RCONEnabled=true,RCONPort=25575
 
 ### Sealos 一键部署
 
-**30s 部署私服 + 管理工具，拒绝复杂步骤**
-
+**30s 部署私服 + 管理工具，拒绝复杂步骤**   
 首先点击以下按钮一键部署帕鲁私服：
 
-[![](https://raw.githubusercontent.com/labring-actions/templates/main/Deploy-on-Sealos.svg)](https://hzh.sealos.run/?uid=1b856tuu)
+[![Palworld 服务器工具截图](https://raw.githubusercontent.com/labring-actions/templates/main/Deploy-on-Sealos.svg)](https://hzh.sealos.run/?uid=1b856tuu)
 
 然后点击以下按钮一键部署 palworld-server-tool：
 
-[![](https://raw.githubusercontent.com/labring-actions/templates/main/Deploy-on-Sealos.svg)](https://hzh.sealos.run/?openapp=system-template%3FtemplateName%3Dpalworld-management)
+[![Palworld 服务器工具截图](https://raw.githubusercontent.com/labring-actions/templates/main/Deploy-on-Sealos.svg)](https://hzh.sealos.run/?openapp=system-template%3FtemplateName%3Dpalworld-management)
 
 ### 文件部署
 
@@ -133,14 +157,14 @@ AdminPassword=...,...,RCONEnabled=true,RCONPort=25575
 
 #### Linux
 
-##### 下载解压
+##### Linux - 下载解压
 
 ```bash
 # 下载 pst_{version}_{platform}_{arch}.tar.gz 文件并解压到 pst 目录
 mkdir -p pst && tar -xzf pst_v0.5.7_linux_x86_64.tar.gz -C pst
 ```
 
-##### 配置
+##### Linux - 配置
 
 1. 打开目录并允许可执行
 
@@ -195,7 +219,7 @@ mkdir -p pst && tar -xzf pst_v0.5.7_linux_x86_64.tar.gz -C pst
      kick_non_whitelist: false
    ```
 
-##### 运行
+##### Linux - 运行
 
 ```bash
 ./pst
@@ -223,11 +247,11 @@ tail -f server.log
 kill $(ps aux | grep 'pst' | awk '{print $2}') | head -n 1
 ```
 
-##### 访问
+##### Linux - 访问
 
-请通过浏览器访问 http://127.0.0.1:8080 或 http://{局域网 IP}:8080
+请通过浏览器访问 http:\/\/127.0.0.1:8080 或 http:\/\/{局域网 IP}:8080
 
-云服务器开放防火墙及安全组后也可以访问 http://{服务器 IP}:8080
+云服务器开放防火墙及安全组后也可以访问 http:\/\/{服务器 IP}:8080
 
 > [!WARNING]
 > 初次打开会显示空白没有内容，请**等待第一次 sav 存档同步完成**再访问
@@ -236,11 +260,11 @@ kill $(ps aux | grep 'pst' | awk '{print $2}') | head -n 1
 
 #### Windows
 
-##### 下载解压
+##### Windows - 下载解压
 
 解压 `pst_v0.5.7_windows_x86_64.zip` 到任意目录（推荐命名文件夹目录名称为 `pst`）
 
-##### 配置
+##### Windows — 配置
 
 找到解压目录中的 `config.yaml` 文件并按照说明修改。
 
@@ -248,7 +272,7 @@ kill $(ps aux | grep 'pst' | awk '{print $2}') | head -n 1
 
 你也可以直接鼠标右键——“属性”，查看路径和文件名，再将它们拼接起来。（存档文件路径和工具路径同理）
 
-![](./docs/img/windows_path.png)
+![Windows 文件属性对话框截图](./docs/img/windows_path.png)
 
 > [!WARNING]
 > 请不要直接将复制的路径粘贴到 `config.yaml` 中，而是需要在所有的 '\\' 前面再加一个 '\\'，像下面展示的一样
@@ -297,7 +321,7 @@ manage:
   kick_non_whitelist: false
 ```
 
-##### 运行
+##### Windows — 运行
 
 这里有两种方式可以在 Windows 下运行
 
@@ -320,11 +344,11 @@ manage:
 
 看到上述界面表示成功运行，请保持窗口打开
 
-##### 访问
+##### Windows — 访问
 
-请通过浏览器访问 http://127.0.0.1:8080 或 http://{局域网 IP}:8080
+请通过浏览器访问 http:\/\/127.0.0.1:8080 或 http:\/\/{局域网 IP}:8080
 
-云服务器开放防火墙及安全组后也可以访问 http://{服务器 IP}:8080
+云服务器开放防火墙及安全组后也可以访问 http:\/\/{服务器 IP}:8080
 
 > [!WARNING]
 > 初次打开会显示空白没有内容，请**等待第一次 sav 存档同步完成**再访问
@@ -354,7 +378,7 @@ jokerwho/palworld-server-tool:latest
 
 最重要的是需要 -v 到游戏存档文件（Level.sav）所在目录，将其映射到容器内的 /game 目录
 
-##### 持久化
+##### 单体部署 - 持久化
 
 如果需要持久化 `pst.db` 文件：
 
@@ -367,7 +391,7 @@ touch pst.db
 
 ##### 环境变量
 
-设置各环境变量，与 [`config.yaml`](#配置) 基本相似，表格如下：
+设置各环境变量，与 `config.yaml` 基本相似，表格如下：
 
 > [!WARNING]
 > 注意区分单个和多个下划线，若需修改最好请复制下表变量名！
@@ -428,7 +452,7 @@ docker run -d --name pst \
 jokerwho/palworld-server-tool:latest
 ```
 
-##### 持久化
+##### Agent 部署 - 持久化
 
 如果需要持久化 `pst.db` 文件：
 
@@ -439,7 +463,7 @@ touch pst.db
 
 然后在 `docker run -v` 中增加 `-v ./pst.db:/app/pst.db`
 
-##### 环境变量
+##### Agent 部署 - 环境变量
 
 > [!WARNING]
 > 注意区分单个和多个下划线，若需修改最好请复制下表变量名！
@@ -515,28 +539,30 @@ save:
 
 1. 挂载守护进程
 
-在原来的 `docker run` 命令中，增加一行 `-v /var/run/docker.sock:/var/run/docker.sock`
+   在原来的 `docker run` 命令中，增加一行 `-v /var/run/docker.sock:/var/run/docker.sock`
 
 2. 修改环境变量
 
-更改 `SAVE__PATH` 环境变量，格式如下：
+   更改 `SAVE__PATH` 环境变量，格式如下：
 
-```bash
-SAVE__PATH="docker://<container_name_or_id>:<游戏存档目录>"
-```
+   ```bash
+   SAVE__PATH="docker://<container_name_or_id>:<游戏存档目录>"
+   ```
 
-比如：
+   比如：
 
-```bash
-SAVE__PATH="docker://palworld-server:/palworld/Pal/Saved"
-#or
-SAVE__PATH="docker://04b0a9af4288:/palworld/Pal/Saved"
-```
+   ```bash
+   SAVE__PATH="docker://palworld-server:/palworld/Pal/Saved"
+   #or
+   SAVE__PATH="docker://04b0a9af4288:/palworld/Pal/Saved"
+   ```
 
 > [!WARNING]
-> 如果在运行后看到如 ` Error response from daemon: client version 1.44 is too new. Maximum supported API version is 1.43` 的报错，是因为你当前 docker engine 使用的 Docker API 版本较低，这时候请再增加一个环境变量：
+> 如果在运行后看到如 `Error response from daemon: client version 1.44 is too new. Maximum supported API version is 1.43` 的报错，是因为你当前 docker engine 使用的 Docker API 版本较低，这时候请再增加一个环境变量：
 >
 > -e DOCKER_API_VERSION="1.43" (你的 API 版本)
+
+<br>
 
 > 由于游戏服务器创建 Level.sav 文件的时间、位置（包含 HASH）在初次都不确定，您只需要指向 Saved 目录级别即可，程序会自动扫描
 

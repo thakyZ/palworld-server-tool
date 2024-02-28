@@ -119,6 +119,7 @@ func CheckAndKickPlayers(db *bbolt.DB, players []database.PlayerRcon) error {
 	for _, player := range players {
 		if !isPlayerWhitelisted(player, whitelist) {
 			// 优先使用SteamId进行操作，如果没有提供，则使用PlayerUid
+			// Prefer to use SteamId for operations, or PlayerUid if it is not provided
 			identifier := player.SteamId
 			if identifier == "" {
 				identifier = player.PlayerUid

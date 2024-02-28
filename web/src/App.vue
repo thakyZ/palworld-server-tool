@@ -24,6 +24,8 @@ const uiDateLocale = ref(null);
 
 // 移动端适配
 // 监听窗口宽度变化
+// Mobile Adaptation
+// Listens for window width changes
 let getScreenWidth = function () {
   let scrollWidth = document.documentElement.clientWidth || window.innerWidth;
   pageStore().setScreenWidth(scrollWidth);

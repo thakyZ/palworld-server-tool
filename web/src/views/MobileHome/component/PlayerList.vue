@@ -1,3 +1,4 @@
+<!-- cSpell:ignore hoverable -->
 <script setup>
 import dayjs from "dayjs";
 import { computed } from "vue";

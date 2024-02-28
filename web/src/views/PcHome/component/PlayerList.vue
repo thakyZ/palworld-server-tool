@@ -1,3 +1,4 @@
+<!-- cSpell:ignore sider, hoverable -->
 <script setup>
 import ApiService from "@/service/api";
 import pageStore from "@/stores/model/page.js";
@@ -30,6 +31,7 @@ const playerPalsList = ref([]);
 const skillTypeList = ref([]);
 
 // 获取玩家列表
+// Get the player list
 const getPlayerList = async () => {
   const { data } = await new ApiService().getPlayerList({
     order_by: "last_online",
@@ -39,6 +41,7 @@ const getPlayerList = async () => {
 };
 
 // 获取玩家详情信息
+// Get the details of a player
 const getPlayerInfo = async (player_uid) => {
   const { data } = await new ApiService().getPlayer({ playerUid: player_uid });
   playerInfo.value = data.value;
@@ -71,6 +74,7 @@ watch(
 );
 
 // 白名单
+// Whitelist
 const whiteList = computed(() => whitelistStore().getWhitelist());
 const isWhite = computed(() => (player) => {
   if (player) {
@@ -103,6 +107,7 @@ onMounted(async () => {
 });
 
 // 其他操作
+// Process other data
 const getUserAvatar = () => {
   return new URL("@/assets/avatar.webp", import.meta.url).href;
 };
@@ -195,7 +200,7 @@ const displayLastOnline = (last_online) => {
           v-if="loadingPlayer"
           class="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-#ffffff40"
         >
-          <template #description> 加载中... </template>
+          <template #description> {{ $t("message.loading") }} </template>
         </n-spin>
       </n-layout-sider>
       <n-layout :native-scrollbar="false" class="relative">
@@ -209,7 +214,7 @@ const displayLastOnline = (last_online) => {
           v-if="loadingPlayerDetail"
           class="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-#ffffff40"
         >
-          <template #description> 加载中... </template>
+          <template #description> {{ $t("message.loading") }} </template>
         </n-spin>
       </n-layout>
     </n-layout>

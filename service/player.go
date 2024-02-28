@@ -22,6 +22,7 @@ func PutPlayers(db *bbolt.DB, players []database.Player) error {
 				}
 
 				/// 数据合并逻辑
+				/// Data consolidation logic
 				if existingPlayer.Level > p.Level || (existingPlayer.Level == p.Level && existingPlayer.Exp > p.Exp) {
 					if len(p.Pals) > len(existingPlayer.Pals) {
 						existingPlayer.Pals = p.Pals
@@ -164,32 +165,39 @@ func GetPlayer(db *bbolt.DB, playerUid string) (database.Player, error) {
 func AddWhitelist(db *bbolt.DB, player database.PlayerW) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		// 获取或创建白名单bucket
+		// Get or create a whitelist bucket
 		b, err := tx.CreateBucketIfNotExists([]byte("whitelist"))
 		if err != nil {
 			return err
 		}
 
 		// 序列化玩家数据为JSON
+		// Serialize player data as JSON
 		playerData, err := json.Marshal(player)
 		if err != nil {
 			return err
 		}
 
 		// 使用 findPlayerKey 检查玩家是否已经在白名单中
+		// Use findPlayerKey to check if the player is already in the whitelist
 		key, err := findPlayerKey(b, player)
 		if err != nil {
 			return err
 		}
 
 		// 如果玩家已存在，更新其信息；如果不存在，创建新的键
+		// If the player already exists, update its information; if not, create a new key
 		if key != nil {
 			// 玩家已存在，更新其信息
+			// Player already exists, update their information
 			if err := b.Put(key, playerData); err != nil {
 				return err
 			}
 		} else {
 			// 玩家不存在，添加新玩家
 			// 生成新玩家的唯一键
+			// Player does not exist, add new player
+			// Unique key for generating new players
 			newPlayerKey := []byte(player.Name + "|" + player.SteamID + "|" + player.PlayerUID)
 			if err := b.Put(newPlayerKey, playerData); err != nil {
 				return err
@@ -267,30 +275,36 @@ func RemoveWhitelist(db *bbolt.DB, player database.PlayerW) error {
 // matchesCriteria checks if the given player matches the criteria.
 func matchesCriteria(existingPlayer, player database.PlayerW) bool {
 	// 如果PlayerUID非空且匹配，认为是同一个玩家
+	// If PlayerUID is non-null and matches, it is considered to be the same player.
 	if player.PlayerUID != "" && existingPlayer.PlayerUID == player.PlayerUID {
 		return true
 	}
 	// 如果Name非空且匹配，认为是同一个玩家
+	// If Name is non-null and matches, it is considered to be the same player.
 	if player.Name != "" && existingPlayer.Name == player.Name {
 		return true
 	}
 	// 如果SteamID非空且匹配，认为是同一个玩家
+	// If SteamID is non-null and matches, it is considered to be the same player
 	if player.SteamID != "" && existingPlayer.SteamID == player.SteamID {
 		return true
 	}
 	// 如果没有任何字段匹配，返回false
+	// If none of the fields match, return false
 	return false
 }
 
 func PutWhitelist(db *bbolt.DB, players []database.PlayerW) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		// 获取或创建白名单bucket
+		// Get or create a whitelist bucket
 		b, err := tx.CreateBucketIfNotExists([]byte("whitelist"))
 		if err != nil {
 			return err
 		}
 
 		// 清空现有的白名单
+		// Empty the existing whitelist
 		err = b.ForEach(func(k, v []byte) error {
 			return b.Delete(k)
 		})
@@ -299,6 +313,7 @@ func PutWhitelist(db *bbolt.DB, players []database.PlayerW) error {
 		}
 
 		// 遍历并添加新的玩家数据到白名单
+		// Iterate and add new player data to the whitelist
 		for _, player := range players {
 			playerData, err := json.Marshal(player)
 			if err != nil {
