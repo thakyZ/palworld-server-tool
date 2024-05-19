@@ -35,6 +35,26 @@ definitions:
       version:
         type: string
     type: object
+  api.ServerMetrics:
+    properties:
+      current_player_num:
+        type: integer
+      max_player_num:
+        type: integer
+      server_fps:
+        type: integer
+      server_frame_time:
+        type: number
+      uptime:
+        type: integer
+    type: object
+  api.ServerToolResponse:
+    properties:
+      latest:
+        type: string
+      version:
+        type: string
+    type: object
   api.ShutdownRequest:
     properties:
       message:
@@ -46,6 +66,15 @@ definitions:
     properties:
       success:
         type: boolean
+    type: object
+  database.Backup:
+    properties:
+      backup_id:
+        type: string
+      path:
+        type: string
+      save_time:
+        type: string
     type: object
   database.Guild:
     properties:
@@ -69,6 +98,63 @@ definitions:
       nickname:
         type: string
       player_uid:
+        type: string
+    type: object
+  database.Item:
+    properties:
+      ItemId:
+        type: string
+      SlotIndex:
+        type: integer
+      StackCount:
+        type: integer
+    type: object
+  database.Items:
+    properties:
+      CommonContainerId:
+        items:
+          $ref: '#/definitions/database.Item'
+        type: array
+      DropSlotContainerId:
+        items:
+          $ref: '#/definitions/database.Item'
+        type: array
+      EssentialContainerId:
+        items:
+          $ref: '#/definitions/database.Item'
+        type: array
+      FoodEquipContainerId:
+        items:
+          $ref: '#/definitions/database.Item'
+        type: array
+      PlayerEquipArmorContainerId:
+        items:
+          $ref: '#/definitions/database.Item'
+        type: array
+      WeaponLoadOutContainerId:
+        items:
+          $ref: '#/definitions/database.Item'
+        type: array
+    type: object
+  database.OnlinePlayer:
+    properties:
+      ip:
+        type: string
+      last_online:
+        type: string
+      level:
+        type: integer
+      location_x:
+        type: number
+      location_y:
+        type: number
+      nickname:
+        type: string
+      ping:
+        type: number
+      player_uid:
+        type: string
+      steam_id:
         type: string
     type: object
   database.Pal:
@@ -114,10 +200,18 @@ definitions:
         type: number
       hp:
         type: integer
+      ip:
+        type: string
+      items:
+        $ref: '#/definitions/database.Items'
       last_online:
         type: string
       level:
         type: integer
+      location_x:
+        type: number
+      location_y:
+        type: number
       max_hp:
         type: integer
       max_status_point:
@@ -128,6 +222,8 @@ definitions:
         items:
           $ref: '#/definitions/database.Pal'
         type: array
+      ping:
+        type: number
       player_uid:
         type: string
       save_last_online:
@@ -156,12 +252,16 @@ definitions:
     properties:
       command:
         type: string
+      placeholder:
+        type: string
       remark:
         type: string
     type: object
   database.RconCommandList:
     properties:
       command:
+        type: string
+      placeholder:
         type: string
       remark:
         type: string
@@ -176,16 +276,24 @@ definitions:
         type: number
       hp:
         type: integer
+      ip:
+        type: string
       last_online:
         type: string
       level:
         type: integer
+      location_x:
+        type: number
+      location_y:
+        type: number
       max_hp:
         type: integer
       max_status_point:
         type: integer
       nickname:
         type: string
+      ping:
+        type: number
       player_uid:
         type: string
       save_last_online:
@@ -207,6 +315,99 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 paths:
+  /api/backup:
+    get:
+      consumes:
+      - application/json
+      description: List all backups or backups within a specific time range.
+      parameters:
+      - description: Start time of the backup range in timestamp
+        in: query
+        name: startTime
+        type: integer
+      - description: End time of the backup range in timestamp
+        in: query
+        name: endTime
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/database.Backup'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List backups within a specified time range
+      tags:
+      - backup
+  /api/backup/{backup_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a backup
+      parameters:
+      - description: Backup ID
+        in: path
+        name: backup_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Backup
+      tags:
+      - backup
+    get:
+      consumes:
+      - application/json
+      description: Download a backup
+      parameters:
+      - description: Backup ID
+        in: path
+        name: backup_id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Backupfile
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Download Backup
+      tags:
+      - backup
   /api/guild:
     get:
       consumes:
@@ -320,6 +521,27 @@ paths:
       summary: Login
       tags:
       - Auth
+  /api/online_player:
+    get:
+      consumes:
+      - application/json
+      description: List Online Players
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/database.OnlinePlayer'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: List Online Players
+      tags:
+      - Player
   /api/player:
     get:
       consumes:
@@ -356,7 +578,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Put Players Only For SavSync,RconSync
+      description: Put Players Only For SavSync,PlayerSync
       parameters:
       - description: Players
         in: body
@@ -483,6 +705,41 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Kick Player
+      tags:
+      - Player
+  /api/player/{player_uid}/unban:
+    post:
+      consumes:
+      - application/json
+      description: Unban Player
+      parameters:
+      - description: Player UID
+        in: path
+        name: player_uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Unban Player
       tags:
       - Player
   /api/rcon:
@@ -704,6 +961,25 @@ paths:
       summary: Publish Broadcast
       tags:
       - Server
+  /api/server/metrics:
+    get:
+      consumes:
+      - application/json
+      description: Get Server Metrics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.ServerMetrics'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Get Server Metrics
+      tags:
+      - Server
   /api/server/shutdown:
     post:
       consumes:
@@ -736,6 +1012,21 @@ paths:
       summary: Shutdown Server
       tags:
       - Server
+  /api/server/tool:
+    get:
+      consumes:
+      - application/json
+      description: Get PalWorld Server Tool
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.ServerToolResponse'
+      summary: Get PalWorld Server Tool
+      tags:
+      - Server
   /api/sync:
     post:
       consumes:
@@ -744,7 +1035,7 @@ paths:
       parameters:
       - description: from
         enum:
-        - rcon
+        - rest
         - sav
         in: query
         name: from

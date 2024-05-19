@@ -1,20 +1,26 @@
 <script setup>
 import { ContentCopyFilled } from "@vicons/material";
-import { LogOut, Ban } from "@vicons/ionicons5";
+import { LogOut, Ban, Search } from "@vicons/ionicons5";
 import { CrownFilled } from "@vicons/antd";
 import dayjs from "dayjs";
-import { computed } from "vue";
+import { onMounted, computed } from "vue";
 import { NTag, NButton, NAvatar, useMessage, useDialog } from "naive-ui";
 import { useI18n } from "vue-i18n";
 import palMap from "@/assets/pal.json";
 import skillMap from "@/assets/skill.json";
 import PalDetail from "./PalDetail.vue";
 import userStore from "@/stores/model/user";
+import ApiService from "@/service/api.js";
 
 const { t, locale } = useI18n();
 
 const message = useMessage();
 const dialog = useDialog();
+
+const localeLowerPalMap = ref({});
+const isDarkMode = ref(
+  window.matchMedia("(prefers-color-scheme: dark)").matches
+);
 
 const isLogin = computed(() => userStore().getLoginInfo().isLogin);
 
@@ -31,9 +37,22 @@ const handelPlayerAction = async (type) => {
     showLoginModal.value = true;
     return;
   } else {
+    const param = {
+      ban: {
+        title: t("message.bantitle"),
+        content: t("message.banwarn"),
+      },
+      unban: {
+        title: t("message.unbantitle"),
+        content: t("message.unbanwarn"),
+      },
+      kick: {
+        title: t("message.kicktitle"),
+        content: t("message.kickwarn"),
+      },
+    }[type];
     dialog.warning({
-      title: type === "ban" ? t("message.banTitle") : t("message.kickTitle"),
-      content: type === "ban" ? t("message.banWarn") : t("message.kickWarn"),
+      ...param,
       positiveText: t("button.confirm"),
       negativeText: t("button.cancel"),
       onPositiveClick: async () => {
@@ -45,6 +64,15 @@ const handelPlayerAction = async (type) => {
             message.success(t("message.banSuccess"));
           } else {
             message.error(t("message.banFail", { err: data.value?.error }));
+          }
+        } else if (type === "unban") {
+          const { data, statusCode } = await new ApiService().unbanPlayer({
+            playerUid: playerInfo?.value.player_uid,
+          });
+          if (statusCode.value === 200) {
+            message.success(t("message.unbansuccess"));
+          } else {
+            message.error(t("message.unbanfail", { err: data.value?.error }));
           }
         } else if (type === "kick") {
           const { data, statusCode } = await new ApiService().kickPlayer({
@@ -62,8 +90,8 @@ const handelPlayerAction = async (type) => {
 };
 
 const searchValue = ref("");
-const clickSearch = () => {
-  emits("onSearch", searchValue.value);
+const clickSearch = (input) => {
+  emits("onSearch", input);
 };
 
 // 查看帕鲁详情
@@ -76,23 +104,30 @@ const showPalDetail = (pal) => {
 };
 
 const isPlayerOnline = (last_online) => {
-  return dayjs() - dayjs(last_online) < 120000;
+  return dayjs() - dayjs(last_online) < 80000;
 };
 
-const copyText = (text) => {
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  document.body.appendChild(textarea);
-  textarea.select();
-
-  try {
-    const successful = document.execCommand("copy");
-    message.success(t("message.copySuccess"));
-  } catch (err) {
-    message.error(t("message.copyErr", { err: err }));
+const copyText = async (text) => {
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text);
+      message.success(t("message.copysuccess"));
+    } catch (err) {
+      message.error(t("message.copyerr", { err }));
+    }
+  } else {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand("copy");
+      message.success(t("message.copysuccess"));
+    } catch (err) {
+      message.error(t("message.copyerr", { err }));
+    }
+    document.body.removeChild(textarea);
   }
-
-  document.body.removeChild(textarea);
 };
 
 const getUserAvatar = () => {
@@ -110,19 +145,55 @@ const percentageHP = (hp, max_hp) => {
   return ((hp / max_hp) * 100).toFixed(2);
 };
 const getPalAvatar = (name) => {
-  return new URL(`../../../assets/pal/${name}.png`, import.meta.url).href;
+  const lowerName = name.toLowerCase();
+  return new URL(`../../../assets/pals/${lowerName}.png`, import.meta.url).href;
 };
-const getUnknowPalAvatar = () => {
-  return new URL("@/assets/pal/Unknown.png", import.meta.url).href;
+const getPalName = (name) => {
+  const lowerName = name.toLowerCase();
+  return localeLowerPalMap.value[lowerName]
+    ? localeLowerPalMap.value[lowerName]
+    : name;
 };
+const getUnknowPalAvatar = (is_boss = false) => {
+  if (is_boss) {
+    return new URL("@/assets/pals/boss_unknown.png", import.meta.url).href;
+  }
+  return new URL("@/assets/pals/unknown.png", import.meta.url).href;
+};
+
+onMounted(async () => {
+  locale.value = localStorage.getItem("locale");
+  localeLowerPalMap.value = Object.keys(palMap[locale.value]).reduce(
+    (acc, key) => {
+      acc[key.toLowerCase()] = palMap[locale.value][key];
+      return acc;
+    },
+    {}
+  );
+});
 </script>
 
 <template>
   <div class="player-detail">
     <n-layout :native-scrollbar="false">
       <!-- ban / kick -->
-      <div v-if="isLogin" class="pt-2 px-3 bg-transparent" position="absolute">
+      <div v-if="isLogin" class="pt-2 px-3" position="absolute">
         <n-flex justify="space-between">
+          <n-button
+            @click="handelPlayerAction('unban')"
+            type="success"
+            size="small"
+            secondary
+            strong
+            round
+          >
+            <template #icon>
+              <n-icon>
+                <Ban />
+              </n-icon>
+            </template>
+            {{ $t("button.unban") }}
+          </n-button>
           <n-button
             @click="handelPlayerAction('ban')"
             type="error"
@@ -213,11 +284,7 @@ const getUnknowPalAvatar = () => {
               ghost
             >
               Steam64:
-              {{
-                playerInfo.steam_id && playerInfo.steam_id.length === 17
-                  ? playerInfo.steam_id
-                  : "--"
-              }}
+              {{ playerInfo.steam_id ? playerInfo.steam_id : "--" }}
               <template #icon>
                 <n-icon><ContentCopyFilled /></n-icon>
               </template>
@@ -266,25 +333,25 @@ const getUnknowPalAvatar = () => {
             }}</n-progress
           >
         </n-space>
-        <div class="flex w-full mt-5 border-b border-b-solid border-b-#eee">
-          <van-field
+        <div class="flex w-full mt-5">
+          <n-input
             v-model="searchValue"
             :placeholder="$t('input.searchPlaceholder')"
-            @update:model-value="clickSearch"
-            right-icon="search"
+            @update:value="clickSearch"
+            style="border: none"
           >
-          </van-field>
+            <template #suffix>
+              <n-icon>
+                <Search />
+              </n-icon>
+            </template>
+          </n-input>
         </div>
-        <van-list :finished="finished" finished-text="没有更多了">
-          <div
+        <n-list>
+          <n-list-item
             v-for="(pal, index) in currentPlayerPalsList"
             :key="pal"
             class="py-2"
-            :class="
-              index < currentPlayerPalsList.length - 1
-                ? 'border-b border-b-solid border-b-#eee'
-                : ''
-            "
             @click="showPalDetail(pal)"
           >
             <div class="flex justify-between items-center">
@@ -292,35 +359,38 @@ const getUnknowPalAvatar = () => {
                 class="bg-#c5c5c5 rounded-md"
                 :size="32"
                 :src="getPalAvatar(pal.type)"
-                :fallback-src="getUnknowPalAvatar()"
+                :fallback-src="getUnknowPalAvatar(pal.is_boss)"
               ></n-avatar>
               <div class="flex-1 flex items-center justify-between ml-3">
-                <van-tag
-                  plain
-                  :type="pal.gender == 'Male' ? 'primary' : 'danger'"
-                  >{{ pal.gender == "Male" ? "♂" : "♀" }}</van-tag
+                <n-tag
+                  size="small"
+                  :type="pal.gender == 'Male' ? 'primary' : 'warning'"
+                  >{{ pal.gender == "Male" ? "♂" : "♀" }}</n-tag
                 >
                 <span class="px-3 flex-1 line-clamp-1">{{
-                  palMap[locale][pal.type] ? palMap[locale][pal.type] : pal.type
+                  getPalName(pal.type)
                 }}</span>
                 <span>{{ "Lv." + pal.level }}</span>
               </div>
             </div>
             <div class="ml-11 mt-1 flex flex-wrap">
-              <van-tag
+              <n-tag
                 v-for="skill in pal.skills"
                 class="rounded-sm mr-2"
-                size="medium"
+                size="small"
                 :key="skill"
                 color="#fcf0e0"
                 text-color="#ee9b2f"
                 >{{
                   skillMap[locale][skill] ? skillMap[locale][skill].name : skill
-                }}</van-tag
+                }}</n-tag
               >
             </div>
-          </div>
-        </van-list>
+          </n-list-item>
+        </n-list>
+        <div v-if="finished" class="text-center pt-4 color-#999">
+          没有更多了
+        </div>
         <div class="h-10"></div>
       </n-card>
     </n-layout>
@@ -349,11 +419,7 @@ const getUnknowPalAvatar = () => {
       </n-tag>
     </template>
     <template #header>
-      {{
-        palMap[locale][palDetail.type]
-          ? palMap[locale][palDetail.type]
-          : palDetail.type
-      }}
+      {{ getPalName(palDetail.type) }}
     </template>
     <pal-detail :palDetail="palDetail"></pal-detail>
   </n-modal>

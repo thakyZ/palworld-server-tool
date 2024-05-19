@@ -4,6 +4,7 @@
 # pylint: disable=C0114
 import os
 import json
+import shutil
 import sys
 import time
 from typing import Any
@@ -17,7 +18,6 @@ from .logger import log
 
 def main() -> None:
     """Main Command Line Method"""
-    output: str | None = None
     start: float = time.time()
     parser = ArgumentParser()
     parser.add_argument(
@@ -36,13 +36,14 @@ def main() -> None:
         if not args.output.endswith(".json"):
             output = args.output + ".json"
 
-    converted: str | dict[str, Any] = convert_sav(args.file)
+    convert_sav(args.file)
     filetime: float = os.stat(args.file).st_mtime
-    if isinstance(converted, str):
-        log("Reading json file returned as typeof string.", "ERROR")
-        sys.exit(1)
-    players: list[dict[str, Any]] = structure_player(converted)
-    guilds: list[dict[str, Any]] = structure_guild(converted, filetime)
+
+    # 同路径下的Players文件夹
+    dir_path = os.path.join(os.path.dirname(args.file), "Players")
+
+    players = structure_player(dir_path)
+    guilds = structure_guild(filetime)
 
     # Add last_online to players
     for player in players:
@@ -84,12 +85,16 @@ def main() -> None:
             log(f"Put Guilds data error: {guild_res.text}", "ERROR")
 
     try:
-        if args.clear is not None:
-            os.unlink(args.file)
+        if args.clear:
+            os.remove(args.file)
+
+            if os.path.exists(dir_path):
+                # 删除Players文件夹
+                shutil.rmtree(dir_path)
     except FileNotFoundError:
         pass
 
-    log(f"Done in {round((time.time() - start), 3)}s")
+    log(f"Done in {round(time.time() - start, 3)}s")
 
 
 if __name__ == "__main__":

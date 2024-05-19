@@ -20,22 +20,13 @@ func PutPlayers(db *bbolt.DB, players []database.Player) error {
 				if err := json.Unmarshal(existingPlayerData, &existingPlayer); err != nil {
 					return err
 				}
-
-				/// 数据合并逻辑
-				/// Data consolidation logic
-				if existingPlayer.Level > p.Level || (existingPlayer.Level == p.Level && existingPlayer.Exp > p.Exp) {
-					if len(p.Pals) > len(existingPlayer.Pals) {
-						existingPlayer.Pals = p.Pals
-					}
-					p = existingPlayer
-				} else if len(p.Pals) < len(existingPlayer.Pals) {
-					p.Pals = existingPlayer.Pals
-				}
-
-				// Rcon data already has this player
 				if existingPlayer.SteamId != "" {
 					p.SteamId = existingPlayer.SteamId
 				}
+				p.Ip = existingPlayer.Ip
+				p.Ping = existingPlayer.Ping
+				p.LocationX = existingPlayer.LocationX
+				p.LocationY = existingPlayer.LocationY
 			}
 			if p.SaveLastOnline != "" {
 				p.LastOnline, _ = time.Parse(time.RFC3339, p.SaveLastOnline)
@@ -52,35 +43,10 @@ func PutPlayers(db *bbolt.DB, players []database.Player) error {
 	})
 }
 
-func isUidMatch(uid1, uid2 string) bool {
-	return strings.Contains(uid1, uid2) || strings.Contains(uid2, uid1)
-}
-
-func PutPlayersRcon(db *bbolt.DB, players []database.PlayerRcon) error {
+func PutPlayersOnline(db *bbolt.DB, players []database.OnlinePlayer) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("players"))
 		for _, p := range players {
-
-			// rcon uid may not equal to player uid but may contain
-			var matchedPlayerUid string
-			err := db.View(func(tx *bbolt.Tx) error {
-				b := tx.Bucket([]byte("players"))
-				return b.ForEach(func(k, v []byte) error {
-					if isUidMatch(string(k), p.PlayerUid) {
-						matchedPlayerUid = string(k)
-						return nil
-					}
-					return nil
-				})
-			})
-			if err != nil {
-				return err
-			}
-
-			if matchedPlayerUid != "" {
-				p.PlayerUid = matchedPlayerUid
-			}
-
 			existingPlayerData := b.Get([]byte(p.PlayerUid))
 			var player database.Player
 			if existingPlayerData == nil {
@@ -88,25 +54,19 @@ func PutPlayersRcon(db *bbolt.DB, players []database.PlayerRcon) error {
 				player.PlayerUid = p.PlayerUid
 				player.SteamId = p.SteamId
 				player.Nickname = p.Nickname
-				player.LastOnline = time.Now()
-
-				v, err := json.Marshal(player)
-				if err != nil {
+			} else {
+				if err := json.Unmarshal(existingPlayerData, &player); err != nil {
 					return err
 				}
-				if err := b.Put([]byte(p.PlayerUid), v); err != nil {
-					return err
+				if player.SteamId == "" || strings.Contains(player.SteamId, "000000") {
+					player.SteamId = p.SteamId
 				}
-				continue
 			}
-
-			if err := json.Unmarshal(existingPlayerData, &player); err != nil {
-				return err
-			}
-
-			if player.SteamId == "" || strings.Contains(player.SteamId, "000000") {
-				player.SteamId = p.SteamId
-			}
+			player.Ip = p.Ip
+			player.Ping = p.Ping
+			player.LocationX = p.LocationX
+			player.LocationY = p.LocationY
+			player.Level = p.Level
 			player.LastOnline = time.Now()
 
 			v, err := json.Marshal(player)

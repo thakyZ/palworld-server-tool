@@ -45,7 +45,9 @@ const getPlayerList = async () => {
 const getPlayerInfo = async (player_uid) => {
   const { data } = await new ApiService().getPlayer({ playerUid: player_uid });
   playerInfo.value = data.value;
-  playerPalsList.value = JSON.parse(JSON.stringify(playerInfo?.value.pals));
+  playerPalsList.value = playerInfo?.value.pals
+    ? JSON.parse(JSON.stringify(playerInfo?.value.pals))
+    : [];
   nextTick(() => {
     const playerInfoEL = document.getElementById("player-info");
     if (playerInfoEL) {
@@ -119,7 +121,7 @@ const getSkillTypeList = () => {
   }
 };
 const isPlayerOnline = (last_online) => {
-  return dayjs() - dayjs(last_online) < 120000;
+  return dayjs() - dayjs(last_online) < 80000;
 };
 const displayLastOnline = (last_online) => {
   if (dayjs(last_online).year() < 1970) {
@@ -184,14 +186,10 @@ const displayLastOnline = (last_online) => {
                   player.nickname
                 }}</span>
               </div>
-              <span
-                :class="
-                  isDarkMode ? 'bg-#2f69aa text-#fff' : 'bg-#ddd text-#18181c'
-                "
-                class="inline-block mt-1 rounded-full text-xs px-2 py-0.5"
-                >{{ $t("status.last_online") }}:
-                {{ displayLastOnline(player.last_online) }}</span
-              >
+              <n-tag :bordered="false" round size="small" class="mt-2">
+                {{ $t("status.last_online") }}:
+                {{ displayLastOnline(player.last_online) }}
+              </n-tag>
             </div>
           </n-list-item>
         </n-list>

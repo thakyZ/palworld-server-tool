@@ -20,10 +20,15 @@ type Pal struct {
 	Skills    []string `json:"skills"`
 }
 
-type PlayerRcon struct {
+type OnlinePlayer struct {
 	PlayerUid  string    `json:"player_uid"`
 	SteamId    string    `json:"steam_id"`
 	Nickname   string    `json:"nickname"`
+	Ip         string    `json:"ip"`
+	Ping       float64   `json:"ping"`
+	LocationX  float64   `json:"location_x"`
+	LocationY  float64   `json:"location_y"`
+	Level      int32     `json:"level"`
 	LastOnline time.Time `json:"last_online"`
 }
 
@@ -45,12 +50,13 @@ type TersePlayer struct {
 	StatusPoint    map[string]int32 `json:"status_point"`
 	FullStomach    float64          `json:"full_stomach"`
 	SaveLastOnline string           `json:"save_last_online"`
-	PlayerRcon
+	OnlinePlayer
 }
 
 type Player struct {
 	TersePlayer
-	Pals []*Pal `json:"pals"`
+	Pals  []*Pal `json:"pals"`
+	Items *Items `json:"items"`
 }
 
 type Guild struct {
@@ -68,11 +74,33 @@ type PlayerW struct {
 }
 
 type RconCommand struct {
-	Command string `json:"command"`
-	Remark  string `json:"remark"`
+	Command     string `json:"command"`
+	Placeholder string `json:"placeholder"`
+	Remark      string `json:"remark"`
 }
 
 type RconCommandList struct {
 	UUID string `json:"uuid"`
 	RconCommand
+}
+
+type Items struct {
+	CommonContainerId           []*Item `json:"CommonContainerId"`
+	DropSlotContainerId         []*Item `json:"DropSlotContainerId"`
+	EssentialContainerId        []*Item `json:"EssentialContainerId"`
+	FoodEquipContainerId        []*Item `json:"FoodEquipContainerId"`
+	PlayerEquipArmorContainerId []*Item `json:"PlayerEquipArmorContainerId"`
+	WeaponLoadOutContainerId    []*Item `json:"WeaponLoadOutContainerId"`
+}
+
+type Item struct {
+	SlotIndex  int32  `json:"SlotIndex"`
+	ItemId     string `json:"ItemId"`
+	StackCount int32  `json:"StackCount"`
+}
+
+type Backup struct {
+	BackupId string    `json:"backup_id"`
+	SaveTime time.Time `json:"save_time"`
+	Path     string    `json:"path"`
 }

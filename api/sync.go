@@ -11,7 +11,7 @@ import (
 type From string
 
 const (
-	FromRcon From = "rcon"
+	FromRest From = "rest"
 	FromSav  From = "sav"
 )
 
@@ -23,15 +23,15 @@ const (
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			from	query		From	true	"from"	enum(rcon,sav)
+//	@Param			from	query		From	true	"from"	enum(rest,sav)
 //
 //	@Success		200		{object}	SuccessResponse
 //	@Failure		401		{object}	ErrorResponse
 //	@Router			/api/sync [post]
 func syncData(c *gin.Context) {
 	from := c.Query("from")
-	if from == "rcon" {
-		go task.RconSync(database.GetDB())
+	if from == "rest" {
+		go task.PlayerSync(database.GetDB())
 		c.JSON(http.StatusOK, gin.H{"success": true})
 		return
 	} else if from == "sav" {

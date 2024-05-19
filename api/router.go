@@ -44,8 +44,7 @@ func Logger() gin.HandlerFunc {
 	})
 }
 
-func RegisterRouter() *gin.Engine {
-	r := gin.New()
+func RegisterRouter(r *gin.Engine) {
 	r.Use(Logger(), gin.Recovery())
 
 	r.POST("/api/login", loginHandler)
@@ -56,8 +55,11 @@ func RegisterRouter() *gin.Engine {
 	anonymousGroup := apiGroup.Group("")
 	{
 		anonymousGroup.GET("/server", getServer)
+		anonymousGroup.GET("/server/tool", getServerTool)
+		anonymousGroup.GET("/server/metrics", getServerMetrics)
 		anonymousGroup.GET("/player", listPlayers)
 		anonymousGroup.GET("/player/:player_uid", getPlayer)
+		anonymousGroup.GET("/online_player", listOnlinePlayers)
 		anonymousGroup.GET("/guild", listGuilds)
 		anonymousGroup.GET("/guild/:admin_player_uid", getGuild)
 	}
@@ -70,6 +72,7 @@ func RegisterRouter() *gin.Engine {
 		authGroup.PUT("/player", putPlayers)
 		authGroup.POST("/player/:player_uid/kick", kickPlayer)
 		authGroup.POST("/player/:player_uid/ban", banPlayer)
+		authGroup.POST("/player/:player_uid/unban", unbanPlayer)
 		authGroup.PUT("/guild", putGuilds)
 		authGroup.POST("/sync", syncData)
 		authGroup.GET("/whitelist", listWhite)
@@ -82,7 +85,8 @@ func RegisterRouter() *gin.Engine {
 		authGroup.POST("/rcon/send", sendRconCommand)
 		authGroup.PUT("/rcon/:uuid", putRconCommand)
 		authGroup.DELETE("/rcon/:uuid", removeRconCommand)
+		authGroup.GET("/backup", listBackups)
+		authGroup.GET("/backup/:backup_id", downloadBackup)
+		authGroup.DELETE("/backup/:backup_id", deleteBackup)
 	}
-
-	return r
 }

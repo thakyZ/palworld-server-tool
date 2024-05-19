@@ -7,6 +7,8 @@ import {
   DeleteOutlineTwotone,
   RemoveRedEyeTwotone,
   DeleteFilled,
+  ArchiveOutlined,
+  CloudDownloadOutlined,
 } from "@vicons/material";
 import {
   GameController,
@@ -14,14 +16,18 @@ import {
   ShieldCheckmarkSharp,
   Terminal,
   ArchiveOutline,
+  Settings,
 } from "@vicons/ionicons5";
+import { GuiManagement } from "@vicons/carbon";
 import { BroadcastTower } from "@vicons/fa";
 import { computed, onMounted, ref } from "vue";
-import { NTag, NButton, useMessage, useDialog } from "naive-ui";
+import { NTag, NButton, NIcon, useMessage, useDialog } from "naive-ui";
 import { useI18n } from "vue-i18n";
 import ApiService from "@/service/api";
 import pageStore from "@/stores/model/page.js";
 import dayjs from "dayjs";
+import palMap from "@/assets/pal.json";
+import itemMap from "@/assets/items.json";
 import skillMap from "@/assets/skill.json";
 import PlayerList from "./component/PlayerList.vue";
 import GuildList from "./component/GuildList.vue";
@@ -29,6 +35,7 @@ import whitelistStore from "@/stores/model/whitelist";
 import playerToGuildStore from "@/stores/model/playerToGuild";
 import { watch } from "vue";
 import userStore from "@/stores/model/user";
+import { h } from "vue";
 
 const { t, locale } = useI18n();
 
@@ -42,8 +49,10 @@ const smallScreen = computed(() => pageWidth.value < 1024);
 
 const loading = ref(false);
 const serverInfo = ref({});
+const serverMetrics = ref({});
 const currentDisplay = ref("players");
 const playerList = ref([]);
+const onlinePlayerList = ref([]);
 const guildList = ref([]);
 const playerInfo = ref({});
 const playerPalsList = ref([]);
@@ -95,27 +104,70 @@ const getSkillTypeList = () => {
   }
 };
 
+const toPalConf = () => {
+  window.open("/pal-conf");
+};
+
+const toGithub = () => {
+  window.open("https://github.com/zaigie/palworld-server-tool/releases");
+};
+const serverToolInfo = ref({});
+const hasNewVersion = ref(false);
+const getServerToolInfo = async () => {
+  const { data } = await new ApiService().getServerToolInfo();
+  serverToolInfo.value = data.value;
+  if (data.value) {
+    hasNewVersion.value = isNewVersion(data.value?.version, data.value?.latest);
+  }
+};
+const isNewVersion = (version, latest) => {
+  if (version == "Unknown" || version == "Develop" || latest == "") {
+    return false;
+  }
+  const currentVersion = version.split("v")[1];
+  const latestVersion = latest?.split("v")[1];
+  const currentParts = currentVersion.substring(1).split(".");
+  const latestParts = latestVersion.substring(1).split(".");
+  for (let i = 0; i < currentParts.length; i++) {
+    const currentPart = parseInt(currentParts[i], 10);
+    const latestPart = parseInt(latestParts[i], 10);
+    if (latestPart > currentPart) {
+      return true;
+    } else if (latestPart < currentPart) {
+      return false;
+    }
+  }
+  return false;
+};
+
 // get data
 const getServerInfo = async () => {
   const { data } = await new ApiService().getServerInfo();
   serverInfo.value = data.value;
 };
 
+const getServerMetrics = async () => {
+  const { data } = await new ApiService().getServerMetrics();
+  serverMetrics.value = data.value;
+};
+
 const getPlayerList = async () => {
+  getOnlineList();
   const { data } = await new ApiService().getPlayerList({
     order_by: "last_online",
     desc: true,
   });
   playerList.value = data.value;
+  rconPlayerOptions.value = data.value.map((item) => {
+    return {
+      label: `${item.nickname}(${item.player_uid})`,
+      value: `${item.player_uid}-${item.steam_id}`,
+    };
+  });
 };
-
-const isPlayerOnline = (last_online) => {
-  return dayjs() - dayjs(last_online) < 120000;
-};
-const getOnlineList = () => {
-  return playerList.value.filter((player) =>
-    isPlayerOnline(player.last_online)
-  );
+const getOnlineList = async () => {
+  const { data } = await new ApiService().getOnlinePlayerList();
+  onlinePlayerList.value = data.value;
 };
 
 // login
@@ -141,7 +193,39 @@ const handleLogin = async () => {
 };
 const showRconDrawer = ref(false);
 const rconCommands = ref([]);
+const rconSelectedPlayer = ref(null);
+const rconPlayerOptions = ref([]);
+const rconSelectedItem = ref(null);
+const rconItemOptions = ref([]);
+const rconSelectedPal = ref(null);
+const rconPalOptions = ref([]);
 const rconCommandsExtra = ref({});
+const copyText = async (text) => {
+  if (text == "" || text == null) {
+    message.error(t("message.copyempty"));
+    return;
+  }
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text);
+      message.success(t("message.copysuccess"));
+    } catch (err) {
+      message.error(t("message.copyerr", { err }));
+    }
+  } else {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand("copy");
+      message.success(t("message.copysuccess"));
+    } catch (err) {
+      message.error(t("message.copyerr", { err }));
+    }
+    document.body.removeChild(textarea);
+  }
+};
 const handleRconDrawer = () => {
   if (checkAuthToken()) {
     showRconDrawer.value = true;
@@ -179,10 +263,12 @@ const sendRconCommand = async (uuid) => {
 
 const showRconAddModal = ref(false);
 const newRconCommand = ref("");
+const newRconPlaceholder = ref("");
 const newRconRemark = ref("");
 const handleAddRconCommand = () => {
   showRconAddModal.value = true;
   newRconCommand.value = "";
+  newRconPlaceholder.value = "";
   newRconRemark.value = "";
 };
 const handleImportRconFinish = (options) => {
@@ -202,12 +288,14 @@ const addRconCommand = async () => {
   if (checkAuthToken()) {
     const { data, statusCode } = await new ApiService().addRconCommand({
       command: newRconCommand.value,
+      placeholder: newRconPlaceholder.value,
       remark: newRconRemark.value,
     });
     if (statusCode.value === 200) {
       message.success(t("message.addRconSuccess"));
       await getRconCommands();
       newRconCommand.value = "";
+      newRconPlaceholder.value = "";
       newRconRemark.value = "";
     } else {
       message.error(t("message.addRconFail", { err: data.value?.error }));
@@ -223,6 +311,99 @@ const removeRconCommand = async (uuid) => {
     } else {
       message.error(t("message.removeRconFail", { err: data.value?.error }));
     }
+  }
+};
+
+// 控制中心（下拉菜单）
+// 包含：白名单管理、RCON 命令、游戏内广播、关闭服务器
+const renderIcon = (icon, color = "#666") => {
+  return () => {
+    return h(
+      NIcon,
+      {
+        color: color,
+      },
+      {
+        default: () => h(icon),
+      }
+    );
+  };
+};
+const controlCenterOption = [
+  // {
+  //   label: () => {
+  //     return h("div", null, {
+  //       default: () => t("button.backup"),
+  //     });
+  //   },
+  //   key: "backup",
+  //   icon: renderIcon(ArchiveOutlined),
+  // },
+  {
+    label: () => {
+      return h("div", null, {
+        default: () => t("button.palconf"),
+      });
+    },
+    key: "palconf",
+    icon: renderIcon(Settings),
+  },
+  {
+    label: () => {
+      return h("div", null, {
+        default: () => t("button.whitelist"),
+      });
+    },
+    key: "whitelist",
+    icon: renderIcon(ShieldCheckmarkSharp),
+  },
+  // {
+  //   label: () => {
+  //     return h("div", null, {
+  //       default: () => t("button.rcon"),
+  //     });
+  //   },
+  //   key: "rcon",
+  //   icon: renderIcon(Terminal),
+  // },
+  {
+    label: () => {
+      return h("div", null, {
+        default: () => t("button.broadcast"),
+      });
+    },
+    key: "broadcast",
+    icon: renderIcon(BroadcastTower),
+  },
+  {
+    label: () => {
+      return h(
+        "div",
+        {
+          style: { color: "#cc2d48" },
+        },
+        {
+          default: () => t("button.shutdown"),
+        }
+      );
+    },
+    key: "shutdown",
+    icon: renderIcon(SettingsPowerRound, "#cc2d48"),
+  },
+];
+const handleSelectControlCenter = (key) => {
+  if (key === "palconf") {
+    toPalConf();
+  } else if (key === "whitelist") {
+    handleWhiteList();
+  } else if (key === "rcon") {
+    handleRconDrawer();
+  } else if (key === "broadcast") {
+    handleStartBrodcast();
+  } else if (key === "shutdown") {
+    handleShutdown();
+  } else {
+    message.error("错误");
   }
 };
 
@@ -350,11 +531,7 @@ const handleBroadcast = async () => {
     showBroadcastModal.value = false;
     broadcastText.value = "";
   } else {
-    if (data.value?.error.includes("contain non-ascii")) {
-      message.error(t("message.broadcastAsciiErr"));
-      return;
-    }
-    message.error(t("message.broadcastFail", { err: data.value?.error }));
+    message.error(t("message.broadcastfail", { err: data.value?.error }));
   }
 };
 
@@ -442,6 +619,130 @@ const isTokenExpired = (token) => {
   return payload.exp < Date.now() / 1000;
 };
 
+const backupModal = ref(false);
+const backupList = ref([]);
+
+const handleBackupList = () => {
+  if (checkAuthToken()) {
+    backupModal.value = true;
+  } else {
+    message.error(t("message.requireauth"));
+    showLoginModal.value = true;
+  }
+};
+const getBackupList = async () => {
+  if (checkAuthToken()) {
+    const { data, statusCode } = await new ApiService().getBackupList({
+      startTime: range.value[0],
+      endTime: range.value[1],
+    });
+    if (statusCode.value === 200) {
+      backupList.value = data.value;
+    }
+  }
+};
+const getBackupListWithRange = async (selectRange) => {
+  let startTime = selectRange[0] ? selectRange[0] : 0;
+  let endTime = selectRange[1] ? selectRange[1] : 0;
+  if (checkAuthToken()) {
+    const { data, statusCode } = await new ApiService().getBackupList({
+      startTime,
+      endTime,
+    });
+    if (statusCode.value === 200) {
+      backupList.value = data.value;
+    }
+  }
+};
+const backupColumns = [
+  {
+    title: t("item.time"),
+    key: "save_time",
+    width: "200px",
+    render: (row) => {
+      return dayjs(row.save_time).format("YYYY-MM-DD HH:mm:ss");
+    },
+  },
+  // {
+  //   title: t("item.backupFile"),
+  //   key: "path",
+  //   render: (row) => {
+  //     return row.path;
+  //   },
+  // },
+  {
+    title: "",
+    key: "action",
+    width: "200px",
+    render: (row) => {
+      return [
+        h(
+          NButton,
+          {
+            type: "primary",
+            size: "small",
+            renderIcon: () => h(CloudDownloadOutlined),
+            onClick: () => downloadBackup(row),
+          },
+          { default: () => t("button.download") }
+        ),
+        h(
+          NButton,
+          {
+            type: "error",
+            size: "small",
+            renderIcon: () => h(DeleteOutlineTwotone),
+            style: "margin-left: 20px",
+            onClick: () => removeBackup(row),
+          },
+          { default: () => t("button.remove") }
+        ),
+      ];
+    },
+  },
+];
+
+const range = ref([Date.now() - 1 * 24 * 60 * 60 * 1000, Date.now()]);
+const isDownloading = ref(false);
+const removeBackup = async (item) => {
+  if (checkAuthToken()) {
+    isDownloading.value = true;
+    const { data, statusCode } = await new ApiService().removeBackup(
+      item.backup_id
+    );
+    if (statusCode.value === 200) {
+      message.success(t("message.removebackupsuccess"));
+      await getBackupList();
+    } else {
+      message.error(t("message.removebackupfail", { err: data.value?.error }));
+    }
+    isDownloading.value = false;
+  }
+};
+
+const downloadBackup = async (item) => {
+  if (checkAuthToken()) {
+    isDownloading.value = true;
+    try {
+      const { data: blobData, execute: fetchBlob } =
+        await new ApiService().downloadBackup(item.backup_id);
+      await fetchBlob();
+      const url = URL.createObjectURL(blobData.value);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", item.path);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      message.success(t("message.downloadsuccess"));
+    } catch (error) {
+      console.error("Download failed", error);
+    }
+    isDownloading.value = false;
+  }
+};
+
 onMounted(async () => {
   locale.value = localStorage.getItem("locale");
   languageOptions.value = [
@@ -465,13 +766,35 @@ onMounted(async () => {
   mediaQuery.addEventListener("change", updateDarkMode);
   isDarkMode.value = mediaQuery.matches;
 
+  rconItemOptions.value = itemMap[locale.value].map((item) => {
+    return {
+      label: `${item.name}-${item.key}`,
+      value: item.key,
+    };
+  });
+
+  rconPalOptions.value = Object.entries(palMap[locale.value]).map(
+    ([key, value]) => {
+      return {
+        label: `${value}-${key}`,
+        value: key,
+      };
+    }
+  );
   skillTypeList.value = getSkillTypeList();
   loading.value = true;
   checkAuthToken();
   getServerInfo();
+  getServerMetrics();
+  getServerToolInfo();
   getPlayerList();
   await getWhitelist();
   loading.value = false;
+  await getBackupList();
+  setInterval(async () => {
+    await getPlayerList();
+    await getServerMetrics();
+  }, 60000);
 });
 </script>
 
@@ -487,11 +810,39 @@ onMounted(async () => {
           :class="smallScreen ? 'text-lg' : 'text-2xl'"
           >{{ $t("title") }}</span
         >
-        <n-tag type="default" :size="smallScreen ? 'medium' : 'large'">{{
-          serverInfo?.name
-            ? `${serverInfo.name + " " + serverInfo.version}`
-            : $t("message.loading")
-        }}</n-tag>
+        <n-badge
+          v-if="serverToolInfo?.version"
+          :value="hasNewVersion ? 'new' : ''"
+        >
+          <n-tag
+            type="warning"
+            :size="smallScreen ? 'mini' : 'medium'"
+            round
+            @click="toGithub"
+            style="cursor: pointer"
+            >{{ serverToolInfo.version }}</n-tag
+          >
+        </n-badge>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-tag type="default" :size="smallScreen ? 'medium' : 'large'">{{
+              serverInfo?.name
+                ? `${serverInfo.name + " " + serverInfo.version}`
+                : $t("message.loading")
+            }}</n-tag>
+          </template>
+          <div>
+            <p>{{ $t("item.serverFps") }}: {{ serverMetrics?.server_fps }}</p>
+            <p>{{ $t("item.serverUptime") }}: {{ serverMetrics?.uptime }}(s)</p>
+            <p>
+              {{ $t("item.serverFrameTime") }}:
+              {{ serverMetrics?.server_frame_time }}(ms)
+            </p>
+            <p>
+              {{ $t("item.maxPlayerNum") }}: {{ serverMetrics?.max_player_num }}
+            </p>
+          </div>
+        </n-tooltip>
       </n-space>
 
       <n-space>
@@ -570,24 +921,26 @@ onMounted(async () => {
                 $t("status.player_number", { number: playerList?.length })
               }}</n-tag>
               <n-tag type="success" round size="large">{{
-                $t("status.online_number", { number: getOnlineList().length })
+                $t("status.online_number", {
+                  number: serverMetrics?.current_player_num,
+                })
               }}</n-tag>
             </n-space>
-            <n-space v-if="isLogin">
+            <n-space v-if="isLogin" class="flex items-center">
               <n-button
                 :size="smallScreen ? 'medium' : 'large'"
-                type="warning"
+                type="success"
                 secondary
                 strong
                 round
-                @click="handleWhiteList"
+                @click="handleBackupList"
               >
                 <template #icon>
                   <n-icon>
-                    <ShieldCheckmarkSharp />
+                    <ArchiveOutlined />
                   </n-icon>
                 </template>
-                {{ $t("button.whitelist") }}
+                {{ $t("button.backup") }}
               </n-button>
               <n-button
                 :size="smallScreen ? 'medium' : 'large'"
@@ -603,6 +956,57 @@ onMounted(async () => {
                   </n-icon>
                 </template>
                 {{ $t("button.rcon") }}
+              </n-button>
+              <n-dropdown
+                trigger="click"
+                size="large"
+                :options="controlCenterOption"
+                @select="handleSelectControlCenter"
+              >
+                <n-button
+                  :size="smallScreen ? 'medium' : 'large'"
+                  type="error"
+                  secondary
+                  strong
+                  round
+                >
+                  <template #icon>
+                    <n-icon>
+                      <GuiManagement />
+                    </n-icon>
+                  </template>
+                  {{ $t("button.controlCenter") }}</n-button
+                >
+              </n-dropdown>
+              <!-- <n-button
+                :size="smallScreen ? 'medium' : 'large'"
+                type="default"
+                secondary
+                strong
+                round
+                @click="toPalConf"
+              >
+                <template #icon>
+                  <n-icon>
+                    <Settings />
+                  </n-icon>
+                </template>
+                {{ $t("button.palconf") }}
+              </n-button>
+              <n-button
+                :size="smallScreen ? 'medium' : 'large'"
+                type="warning"
+                secondary
+                strong
+                round
+                @click="handleWhiteList"
+              >
+                <template #icon>
+                  <n-icon>
+                    <ShieldCheckmarkSharp />
+                  </n-icon>
+                </template>
+                {{ $t("button.whitelist") }}
               </n-button>
               <n-button
                 :size="smallScreen ? 'medium' : 'large'"
@@ -633,7 +1037,7 @@ onMounted(async () => {
                   </n-icon>
                 </template>
                 {{ $t("button.shutdown") }}
-              </n-button>
+              </n-button> -->
             </n-space>
           </n-layout-header>
           <div class="overflow-hidden" style="height: calc(100% - 64px)">
@@ -784,6 +1188,13 @@ onMounted(async () => {
           round
           :placeholder="$t('input.remark')"
         ></n-input>
+        <n-input
+          class="mt-5"
+          v-model:value="newRconPlaceholder"
+          size="large"
+          round
+          :placeholder="$t('input.placeholder')"
+        ></n-input>
         <n-button
           class="mt-5"
           style="width: 100%"
@@ -804,7 +1215,82 @@ onMounted(async () => {
           {{ $t("button.addRcon") }}
         </n-button>
       </template>
-      <n-collapse>
+      <div class="flex w-full items-center">
+        <n-select
+          :placeholder="$t('input.selectPlayer')"
+          v-model:value="rconSelectedPlayer"
+          filterable
+          :options="rconPlayerOptions"
+        />
+        <!-- <n-button
+          class="ml-2"
+          type="primary"
+          strong
+          secondary
+          @click="copyText(rconSelectedPlayer?.split('-')[1])"
+        >
+          {{ $t("button.copysid") }}
+        </n-button>
+        <n-button
+          class="ml-2"
+          type="primary"
+          strong
+          secondary
+          @click="copyText(rconSelectedPlayer?.split('-')[0])"
+        >
+          {{ $t("button.copypid") }}
+        </n-button> -->
+      </div>
+      <div class="flex w-full items-center mt-3 justify-between">
+        <n-text
+          >PlayerID: {{ rconSelectedPlayer?.split("-")[0] || "-" }}</n-text
+        >
+        <n-text>Steam64: {{ rconSelectedPlayer?.split("-")[1] || "-" }}</n-text>
+      </div>
+
+      <div class="flex w-full items-center mt-3">
+        <n-select
+          :placeholder="$t('input.selectItem')"
+          v-model:value="rconSelectedItem"
+          filterable
+          :options="rconItemOptions"
+        />
+        <!-- <n-button
+          class="ml-2"
+          type="primary"
+          strong
+          secondary
+          @click="copyText(rconSelectedItem)"
+        >
+          {{ $t("button.copyitem") }}
+        </n-button> -->
+      </div>
+      <div class="flex w-full items-center mt-3 justify-between">
+        <n-text>ID: {{ rconSelectedItem || "-" }}</n-text>
+      </div>
+
+      <div class="flex w-full items-center mt-3">
+        <n-select
+          :placeholder="$t('input.selectPal')"
+          v-model:value="rconSelectedPal"
+          filterable
+          :options="rconPalOptions"
+        />
+        <!-- <n-button
+          class="ml-2"
+          type="primary"
+          strong
+          secondary
+          @click="copyText(rconSelectedPal)"
+        >
+          {{ $t("button.copypal") }}
+        </n-button> -->
+      </div>
+      <div class="flex w-full items-center mt-3 justify-between">
+        <n-text>ID: {{ rconSelectedPal || "-" }}</n-text>
+      </div>
+      <n-empty class="mt-3" v-if="rconCommands.length == 0"> </n-empty>
+      <n-collapse class="mt-3">
         <n-collapse-item
           v-for="rconCommand in rconCommands"
           :key="rconCommand.uuid"
@@ -815,11 +1301,13 @@ onMounted(async () => {
           <n-input-group>
             <n-input
               round
-              :placeholder="$t('input.extraContent')"
+              :placeholder="rconCommand.placeholder"
               v-model:value="rconCommandsExtra[rconCommand.uuid]"
             >
               <template #prefix>
-                <n-text>{{ rconCommand.command + "  +" }}</n-text>
+                <n-text>{{
+                  rconCommand.command + (rconCommand.placeholder ? "  +" : "")
+                }}</n-text>
               </template>
             </n-input>
             <n-button
@@ -958,6 +1446,57 @@ onMounted(async () => {
             type="success"
           >
             {{ $t("button.save") }}
+          </n-button>
+        </n-space>
+      </div>
+    </template>
+  </n-modal>
+  <!-- backup modal -->
+  <n-modal
+    v-model:show="backupModal"
+    class="custom-card"
+    preset="card"
+    style="width: 90%; max-width: 700px"
+    footer-style="padding: 12px;"
+    content-style="padding: 12px;"
+    header-style="padding: 12px;"
+    :title="$t('modal.backup')"
+    size="small"
+    :bordered="false"
+    :mask-closable="false"
+    :close-on-esc="false"
+    :segmented="segmented"
+  >
+    <div>
+      <n-empty description="empty" v-if="backupList.length == 0"> </n-empty>
+      <div class="flex flex-col item mlr-3 mb-3 p-1" v-else>
+        <n-date-picker
+          class="mb-4"
+          v-model:value="range"
+          type="datetimerange"
+          @confirm="getBackupListWithRange"
+        />
+        <n-scrollbar style="max-height: 320px">
+          <n-data-table
+            :columns="backupColumns"
+            :data="backupList"
+            :bordered="false"
+          />
+        </n-scrollbar>
+      </div>
+    </div>
+    <template #footer>
+      <div class="flex justify-end">
+        <n-space>
+          <n-button
+            type="tertiary"
+            @click="
+              () => {
+                backupModal = false;
+              }
+            "
+          >
+            {{ $t("button.close") }}
           </n-button>
         </n-space>
       </div>

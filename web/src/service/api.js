@@ -6,8 +6,14 @@ class ApiService extends Service {
     return this.fetch(`/api/login`).post(data).json();
   }
 
+  async getServerToolInfo() {
+    return this.fetch(`/api/server/tool`).get().json();
+  }
   async getServerInfo() {
     return this.fetch(`/api/server`).get().json();
+  }
+  async getServerMetrics() {
+    return this.fetch(`/api/server/metrics`).get().json();
   }
   async sendBroadcast(param) {
     let data = param;
@@ -22,6 +28,9 @@ class ApiService extends Service {
     const query = this.generateQuery(param);
     return this.fetch(`/api/player?${query}`).get().json();
   }
+  async getOnlinePlayerList() {
+    return this.fetch(`/api/online_player`).get().json();
+  }
   async getPlayer(param) {
     const { playerUid } = param;
     return this.fetch(`/api/player/${playerUid}`).get().json();
@@ -33,6 +42,10 @@ class ApiService extends Service {
   async banPlayer(param) {
     const { playerUid } = param;
     return this.fetch(`/api/player/${playerUid}/ban`).post().json();
+  }
+  async unbanPlayer(param) {
+    const { playerUid } = param;
+    return this.fetch(`/api/player/${playerUid}/unban`).post().json();
   }
 
   async getGuildList() {
@@ -83,6 +96,19 @@ class ApiService extends Service {
 
   async removeRconCommand(uuid) {
     return this.fetch(`/api/rcon/${uuid}`).delete().json();
+  }
+
+  async getBackupList(param) {
+    const query = this.generateQuery(param);
+    return this.fetch(`/api/backup?${query}`).get().json();
+  }
+
+  async removeBackup(uuid) {
+    return this.fetch(`/api/backup/${uuid}`).delete().json();
+  }
+
+  async downloadBackup(uuid) {
+    return this.fetch(`/api/backup/${uuid}`).get().blob();
   }
 }
 

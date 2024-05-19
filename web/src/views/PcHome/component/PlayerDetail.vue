@@ -13,6 +13,7 @@ import PalDetail from "./PalDetail.vue";
 import whitelistStore from "@/stores/model/whitelist.js";
 import playerToGuildStore from "@/stores/model/playerToGuild.js";
 import userStore from "@/stores/model/user";
+import palItems from "@/assets/items.json";
 
 const { t, locale } = useI18n();
 const PALWORLD_TOKEN = "palworld_token";
@@ -29,6 +30,7 @@ const isDarkMode = ref(
   window.matchMedia("(prefers-color-scheme: dark)").matches
 );
 
+const localeLowerPalMap = ref({});
 const skillTypeList = ref([]);
 
 // 帕鲁列表
@@ -77,10 +79,7 @@ const createPlayerPalsColumns = () => {
               },
             },
             {
-              default: () =>
-                palMap[locale.value][row.type]
-                  ? palMap[locale.value][row.type]
-                  : row.type,
+              default: () => getPalName(row.type),
             }
           ),
         ];
@@ -158,6 +157,7 @@ watch(
     paginationReactive.page = 1;
     paginationReactive.pageSize = 10;
     searchValue.value = "";
+    mergeItems();
   }
 );
 
@@ -189,11 +189,7 @@ const clickSearch = () => {
               ? skillMap[locale.value][skill].name
               : skill
           ).includes(searchValue.value);
-        }) ||
-        (palMap[locale.value][item.type]
-          ? palMap[locale.value][item.type]
-          : item.type
-        ).includes(searchValue.value)
+        }) || getPalName(item.type).includes(searchValue.value)
       );
     });
   } else {
@@ -218,33 +214,28 @@ const showPalDetail = (pal) => {
 };
 
 // UID、Steam64 复制
-// UID, STEAM64 copy
-const copyText = (text) => {
-  (async function() {
+const copyText = async (text) => {
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text);
+      message.success(t("message.copysuccess"));
+    } catch (err) {
+      message.error(t("message.copyerr", { err }));
+    }
+  } else {
     const textarea = document.createElement("textarea");
     textarea.value = text;
     document.body.appendChild(textarea);
     textarea.select();
-
     try {
-      const successful = document.execCommand("copy");
-      message.success(t("message.copySuccess"));
-    } catch {
-      try {
-        let permissionsResult = await navigator.permissions.query({ name: "write-on-clipboard" })
-
-        if (permissionsResult.state == "granted" || permissionsResult.state == "prompt") {
-          await navigator.clipboard.writeText(text);
-        }
-      } catch {
-        message.error(t("message.copyErr", { err: err }));
-      }
+      document.execCommand("copy");
+      message.success(t("message.copysuccess"));
+    } catch (err) {
+      message.error(t("message.copyerr", { err }));
     }
-
     document.body.removeChild(textarea);
-  })();
+  }
 };
-
 // 查看公会
 // View guild
 const toGuilds = async (uid) => {
@@ -305,9 +296,22 @@ const handelPlayerAction = async (type) => {
     showLoginModal.value = true;
     return;
   }
+  const param = {
+    ban: {
+      title: t("message.bantitle"),
+      content: t("message.banwarn"),
+    },
+    unban: {
+      title: t("message.unbantitle"),
+      content: t("message.unbanwarn"),
+    },
+    kick: {
+      title: t("message.kicktitle"),
+      content: t("message.kickwarn"),
+    },
+  }[type];
   dialog.warning({
-    title: type === "ban" ? t("message.banTitle") : t("message.kickTitle"),
-    content: type === "ban" ? t("message.banWarn") : t("message.kickWarn"),
+    ...param,
     positiveText: t("button.confirm"),
     negativeText: t("button.cancel"),
     onPositiveClick: async () => {
@@ -319,6 +323,15 @@ const handelPlayerAction = async (type) => {
           message.success(t("message.banSuccess"));
         } else {
           message.error(t("message.banFail", { err: data.value?.error }));
+        }
+      } else if (type === "unban") {
+        const { data, statusCode } = await new ApiService().unbanPlayer({
+          playerUid: playerInfo?.value.player_uid,
+        });
+        if (statusCode.value === 200) {
+          message.success(t("message.unbansuccess"));
+        } else {
+          message.error(t("message.unbanfail", { err: data.value?.error }));
         }
       } else if (type === "kick") {
         const { data, statusCode } = await new ApiService().kickPlayer({
@@ -368,6 +381,13 @@ const isWhite = (player) => {
 onMounted(async () => {
   skillTypeList.value = getSkillTypeList();
   await getWhiteList();
+  localeLowerPalMap.value = Object.keys(palMap[locale.value]).reduce(
+    (acc, key) => {
+      acc[key.toLowerCase()] = palMap[locale.value][key];
+      return acc;
+    },
+    {}
+  );
 });
 
 // 其他操作
@@ -387,16 +407,26 @@ const getSkillTypeList = () => {
   }
 };
 const getPalAvatar = (name) => {
-  return new URL(`../../../assets/pal/${name}.png`, import.meta.url).href;
+  const lowerName = name.toLowerCase();
+  return new URL(`../../../assets/pals/${lowerName}.png`, import.meta.url).href;
+};
+const getPalName = (name) => {
+  const lowerName = name.toLowerCase();
+  return localeLowerPalMap.value[lowerName]
+    ? localeLowerPalMap.value[lowerName]
+    : name;
+};
+const getItemIcon = (id) => {
+  return new URL(`../../../assets/items/${id}.webp`, import.meta.url).href;
 };
 const getUnknowPalAvatar = (is_boss = false) => {
   if (is_boss) {
-    return new URL("@/assets/pal/BOSS_Unknown.png", import.meta.url).href;
+    return new URL("@/assets/pals/boss_unknown.png", import.meta.url).href;
   }
-  return new URL("@/assets/pal/Unknown.png", import.meta.url).href;
+  return new URL("@/assets/pals/unknown.png", import.meta.url).href;
 };
 const isPlayerOnline = (last_online) => {
-  return dayjs() - dayjs(last_online) < 120000;
+  return dayjs() - dayjs(last_online) < 80000;
 };
 
 const displayHP = (hp, max_hp) => {
@@ -408,6 +438,68 @@ const percentageHP = (hp, max_hp) => {
     return 0;
   }
   return ((hp / max_hp) * 100).toFixed(2);
+};
+
+const mergedItems = ref({});
+const mergeItems = () => {
+  mergedItems.value = {};
+
+  if (!playerInfo.value.items) return;
+  for (const [containerId, items] of Object.entries(playerInfo.value.items)) {
+    mergedItems.value[containerId] = items.map((item) => {
+      const frontendItem = palItems[locale.value].find(
+        (frontItem) => frontItem.id === item.ItemId
+      );
+      if (!frontendItem) {
+        return {
+          ...item,
+          id: item.ItemId,
+          name: item.ItemId,
+          description: "No description.",
+          key: item.ItemId,
+        };
+      }
+      return {
+        ...item,
+        id: frontendItem.id,
+        name: frontendItem.name,
+        description: frontendItem.description,
+        key: frontendItem.key,
+      };
+    });
+  }
+};
+
+const createPlayerItemsColumns = () => {
+  return [
+    {
+      title: "",
+      key: "",
+      render(row) {
+        return h(NAvatar, {
+          size: "small",
+          src: getItemIcon(row.id),
+          fallbackSrc: getUnknowPalAvatar(),
+        });
+      },
+    },
+    {
+      title: t("item.name"),
+      key: "name",
+    },
+    {
+      title: t("item.description"),
+      key: "description",
+      defaultSortOrder: "descend",
+    },
+    {
+      title: t("item.count"),
+      key: "StackCount",
+      width: 170,
+      defaultSortOrder: "descend",
+      sorter: "default",
+    },
+  ];
 };
 </script>
 
@@ -422,7 +514,7 @@ const percentageHP = (hp, max_hp) => {
       <n-page-header>
         <n-grid :cols="6">
           <n-gi
-            v-for="status in Object.entries(playerInfo?.status_point)"
+            v-for="status in Object.entries(playerInfo?.status_point || {})"
             :key="status[0]"
           >
             <n-statistic :label="status[0]" :value="status[1]" />
@@ -480,11 +572,7 @@ const percentageHP = (hp, max_hp) => {
               ghost
             >
               Steam64:
-              {{
-                playerInfo.steam_id && playerInfo.steam_id.length === 17
-                  ? playerInfo.steam_id
-                  : "--"
-              }}
+              {{ playerInfo.steam_id ? playerInfo.steam_id : "--" }}
               <template #icon>
                 <n-icon><ContentCopyFilled /></n-icon>
               </template>
@@ -501,6 +589,30 @@ const percentageHP = (hp, max_hp) => {
                 <n-icon><PersonSearchSharp /></n-icon>
               </template>
             </n-button>
+          </div>
+          <div class="flex items-center mt-2 space-x-2">
+            <n-tag v-if="playerInfo.ip" :bordered="false" round size="small">
+              IP: {{ playerInfo.ip }}
+            </n-tag>
+            <n-tag v-if="playerInfo.ping" :bordered="false" round size="small">
+              Ping: {{ playerInfo.ping.toFixed(2) }}
+            </n-tag>
+            <n-tag
+              v-if="playerInfo.location_x"
+              :bordered="false"
+              round
+              size="small"
+            >
+              X: {{ playerInfo.location_x }}
+            </n-tag>
+            <n-tag
+              v-if="playerInfo.location_y"
+              :bordered="false"
+              round
+              size="small"
+            >
+              Y: {{ playerInfo.location_y }}
+            </n-tag>
           </div>
         </template>
         <template #avatar>
@@ -546,29 +658,78 @@ const percentageHP = (hp, max_hp) => {
           }}</n-progress
         >
       </n-space>
-      <div class="w-full mt-5">
-        <n-input-group class="w-full flex justify-end">
-          <n-input
-            v-model:value="searchValue"
-            clearable
-            :placeholder="$t('input.searchPlaceholder')"
-            :on-clear="clearSearch"
-          />
-          <n-button type="primary" class="w-20" @click="clickSearch">
-            {{ $t("button.search") }}
-          </n-button>
-        </n-input-group>
+      <div class="mt-2">
+        <n-tabs type="line" size="large" animated>
+          <n-tab-pane :name="$t('item.palList')">
+            <div class="w-full mt-5">
+              <n-input-group class="w-full flex justify-end">
+                <n-input
+                  v-model:value="searchValue"
+                  clearable
+                  :placeholder="$t('input.searchPlaceholder')"
+                  :on-clear="clearSearch"
+                />
+                <n-button type="primary" class="w-20" @click="clickSearch">
+                  {{ $t("button.search") }}
+                </n-button>
+              </n-input-group>
+            </div>
+            <n-data-table
+              class="mt-2"
+              size="small"
+              :columns="createPlayerPalsColumns()"
+              :row-props="dataRowProps"
+              :data="currentPalsList"
+              :bordered="false"
+              striped
+              :pagination="paginationReactive"
+            />
+          </n-tab-pane>
+          <n-tab-pane :name="$t('item.itemList')">
+            <n-tabs type="segment" animated>
+              <n-tab-pane :name="$t('item.commonContainer')">
+                <n-data-table
+                  size="small"
+                  :columns="createPlayerItemsColumns()"
+                  :data="mergedItems['CommonContainerId']"
+                  :bordered="false"
+                  striped
+                  :pagination="paginationReactive"
+                />
+              </n-tab-pane>
+              <n-tab-pane :name="$t('item.essentialContainer')">
+                <n-data-table
+                  size="small"
+                  :columns="createPlayerItemsColumns()"
+                  :data="mergedItems['EssentialContainerId']"
+                  :bordered="false"
+                  striped
+                  :pagination="paginationReactive"
+                />
+              </n-tab-pane>
+              <n-tab-pane :name="$t('item.weaponContainer')">
+                <n-data-table
+                  size="small"
+                  :columns="createPlayerItemsColumns()"
+                  :data="mergedItems['WeaponLoadOutContainerId']"
+                  :bordered="false"
+                  striped
+                />
+              </n-tab-pane>
+              <n-tab-pane :name="$t('item.armorContainer')">
+                <n-data-table
+                  class="mt-1"
+                  size="small"
+                  :columns="createPlayerItemsColumns()"
+                  :data="mergedItems['PlayerEquipArmorContainerId']"
+                  :bordered="false"
+                  striped
+                />
+              </n-tab-pane>
+            </n-tabs>
+          </n-tab-pane>
+        </n-tabs>
       </div>
-      <n-data-table
-        class="mt-2"
-        size="small"
-        :columns="createPlayerPalsColumns()"
-        :row-props="dataRowProps"
-        :data="currentPalsList"
-        :bordered="false"
-        striped
-        :pagination="paginationReactive"
-      />
     </n-card>
     <!-- 加入白名单，封禁，踢出 -->
     <!-- Add a whitelist, ban the ban, kick out -->
@@ -616,6 +777,21 @@ const percentageHP = (hp, max_hp) => {
         {{ $t("button.ban") }}
       </n-button>
       <n-button
+        @click="handelPlayerAction('unban')"
+        type="success"
+        size="large"
+        secondary
+        strong
+        round
+      >
+        <template #icon>
+          <n-icon>
+            <Ban />
+          </n-icon>
+        </template>
+        {{ $t("button.unban") }}
+      </n-button>
+      <n-button
         @click="handelPlayerAction('kick')"
         type="warning"
         size="large"
@@ -653,11 +829,7 @@ const percentageHP = (hp, max_hp) => {
       </div>
     </template>
     <template #header>
-      {{
-        palMap[locale][palDetail.type]
-          ? palMap[locale][palDetail.type]
-          : palDetail.type
-      }}
+      {{ getPalName(palDetail.type) }}
     </template>
     <pal-detail :palDetail="palDetail"></pal-detail>
   </n-modal>

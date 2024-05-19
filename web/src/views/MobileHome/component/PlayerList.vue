@@ -3,6 +3,10 @@
 import dayjs from "dayjs";
 import { computed } from "vue";
 
+const isDarkMode = ref(
+  window.matchMedia("(prefers-color-scheme: dark)").matches
+);
+
 const props = defineProps(["playerList"]);
 const playerList = computed(() => props.playerList);
 
@@ -17,7 +21,7 @@ const onGetInfo = (uid) => {
 };
 
 const isPlayerOnline = (last_online) => {
-  return dayjs() - dayjs(last_online) < 120000;
+  return dayjs() - dayjs(last_online) < 80000;
 };
 const displayLastOnline = (last_online) => {
   if (dayjs(last_online).year() < 1970) {

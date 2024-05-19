@@ -19,6 +19,153 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/backup": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "List all backups or backups within a specific time range.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "backup"
+                ],
+                "summary": "List backups within a specified time range",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Start time of the backup range in timestamp",
+                        "name": "startTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "End time of the backup range in timestamp",
+                        "name": "endTime",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/database.Backup"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/backup/{backup_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Download a backup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "backup"
+                ],
+                "summary": "Download Backup",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Backup ID",
+                        "name": "backup_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Backupfile",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a backup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "backup"
+                ],
+                "summary": "Delete Backup",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Backup ID",
+                        "name": "backup_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/guild": {
             "get": {
                 "description": "List Guilds",
@@ -193,6 +340,38 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/online_player": {
+            "get": {
+                "description": "List Online Players",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Player"
+                ],
+                "summary": "List Online Players",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/database.OnlinePlayer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/player": {
             "get": {
                 "description": "List Players",
@@ -248,7 +427,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Put Players Only For SavSync,RconSync",
+                "description": "Put Players Only For SavSync,PlayerSync",
                 "consumes": [
                     "application/json"
                 ],
@@ -412,6 +591,61 @@ const docTemplate = `{
                     "Player"
                 ],
                 "summary": "Kick Player",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Player UID",
+                        "name": "player_uid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/player/{player_uid}/unban": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Unban Player",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Player"
+                ],
+                "summary": "Unban Player",
                 "parameters": [
                     {
                         "type": "string",
@@ -796,6 +1030,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/server/metrics": {
+            "get": {
+                "description": "Get Server Metrics",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Server"
+                ],
+                "summary": "Get Server Metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.ServerMetrics"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/server/shutdown": {
             "post": {
                 "security": [
@@ -847,6 +1110,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/server/tool": {
+            "get": {
+                "description": "Get PalWorld Server Tool",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Server"
+                ],
+                "summary": "Get PalWorld Server Tool",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.ServerToolResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/sync": {
             "post": {
                 "security": [
@@ -868,7 +1154,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "enum": [
-                            "rcon",
+                            "rest",
                             "sav"
                         ],
                         "type": "string",
@@ -1131,6 +1417,37 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ServerMetrics": {
+            "type": "object",
+            "properties": {
+                "current_player_num": {
+                    "type": "integer"
+                },
+                "max_player_num": {
+                    "type": "integer"
+                },
+                "server_fps": {
+                    "type": "integer"
+                },
+                "server_frame_time": {
+                    "type": "number"
+                },
+                "uptime": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.ServerToolResponse": {
+            "type": "object",
+            "properties": {
+                "latest": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
         "api.ShutdownRequest": {
             "type": "object",
             "properties": {
@@ -1147,6 +1464,20 @@ const docTemplate = `{
             "properties": {
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "database.Backup": {
+            "type": "object",
+            "properties": {
+                "backup_id": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "save_time": {
+                    "type": "string"
                 }
             }
         },
@@ -1183,6 +1514,93 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "player_uid": {
+                    "type": "string"
+                }
+            }
+        },
+        "database.Item": {
+            "type": "object",
+            "properties": {
+                "ItemId": {
+                    "type": "string"
+                },
+                "SlotIndex": {
+                    "type": "integer"
+                },
+                "StackCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "database.Items": {
+            "type": "object",
+            "properties": {
+                "CommonContainerId": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/database.Item"
+                    }
+                },
+                "DropSlotContainerId": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/database.Item"
+                    }
+                },
+                "EssentialContainerId": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/database.Item"
+                    }
+                },
+                "FoodEquipContainerId": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/database.Item"
+                    }
+                },
+                "PlayerEquipArmorContainerId": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/database.Item"
+                    }
+                },
+                "WeaponLoadOutContainerId": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/database.Item"
+                    }
+                }
+            }
+        },
+        "database.OnlinePlayer": {
+            "type": "object",
+            "properties": {
+                "ip": {
+                    "type": "string"
+                },
+                "last_online": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "location_x": {
+                    "type": "number"
+                },
+                "location_y": {
+                    "type": "number"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "ping": {
+                    "type": "number"
+                },
+                "player_uid": {
+                    "type": "string"
+                },
+                "steam_id": {
                     "type": "string"
                 }
             }
@@ -1252,11 +1670,23 @@ const docTemplate = `{
                 "hp": {
                     "type": "integer"
                 },
+                "ip": {
+                    "type": "string"
+                },
+                "items": {
+                    "$ref": "#/definitions/database.Items"
+                },
                 "last_online": {
                     "type": "string"
                 },
                 "level": {
                     "type": "integer"
+                },
+                "location_x": {
+                    "type": "number"
+                },
+                "location_y": {
+                    "type": "number"
                 },
                 "max_hp": {
                     "type": "integer"
@@ -1272,6 +1702,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/database.Pal"
                     }
+                },
+                "ping": {
+                    "type": "number"
                 },
                 "player_uid": {
                     "type": "string"
@@ -1316,6 +1749,9 @@ const docTemplate = `{
                 "command": {
                     "type": "string"
                 },
+                "placeholder": {
+                    "type": "string"
+                },
                 "remark": {
                     "type": "string"
                 }
@@ -1325,6 +1761,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "command": {
+                    "type": "string"
+                },
+                "placeholder": {
                     "type": "string"
                 },
                 "remark": {
@@ -1347,11 +1786,20 @@ const docTemplate = `{
                 "hp": {
                     "type": "integer"
                 },
+                "ip": {
+                    "type": "string"
+                },
                 "last_online": {
                     "type": "string"
                 },
                 "level": {
                     "type": "integer"
+                },
+                "location_x": {
+                    "type": "number"
+                },
+                "location_y": {
+                    "type": "number"
                 },
                 "max_hp": {
                     "type": "integer"
@@ -1361,6 +1809,9 @@ const docTemplate = `{
                 },
                 "nickname": {
                     "type": "string"
+                },
+                "ping": {
+                    "type": "number"
                 },
                 "player_uid": {
                     "type": "string"
